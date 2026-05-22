@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.1.1";
+  const VERSION = "1.1.2";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -79,6 +79,16 @@
 
   function snippetOf(item) {
     return (item.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120);
+  }
+
+  /** Stable identifier for the lifetime dedupe set. Prefers URN; falls back
+   *  to a short, normalized text snippet when LinkedIn hasn't populated the
+   *  data-urn yet (common on scroll-loaded cards). */
+  function lifetimeKey(item) {
+    const urn = urnOf(item);
+    if (urn) return urn;
+    const snip = snippetOf(item).slice(0, 80);
+    return snip ? "txt:" + snip : null;
   }
 
   function matchesKill(item) {
@@ -159,10 +169,10 @@
       if (suggested || matchesKill(item)) {
         const wasHidden = setHidden(item, true);
         if (wasHidden && suggested) {
-          const urn = urnOf(item);
-          if (urn && !lifetimeUrns.has(urn)) {
-            lifetimeUrns.add(urn);
-            pendingNewUrns.push(urn);
+          const key = lifetimeKey(item);
+          if (key && !lifetimeUrns.has(key)) {
+            lifetimeUrns.add(key);
+            pendingNewUrns.push(key);
             newlyCounted++;
           }
         }
@@ -269,16 +279,23 @@
         if (isSuggested(it)) suggested++;
         else if (matchesKill(it)) killed++;
       });
+      const suggestedItems = [...items].filter((it) => isSuggested(it));
+      const withUrn = suggestedItems.filter((it) => !!urnOf(it)).length;
       console.log(LOG, "DIAG", {
         version: VERSION,
         url: location.href,
         enabled,
         listItems: items.length,
         suggestedHits: suggested,
+        suggestedWithUrn: withUrn,
+        suggestedWithoutUrn: suggestedItems.length - withUrn,
         killMatches: killed,
         storedKills: kills.length,
         hidden: document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`).length,
         pageHidden,
+        lifetimeSize: lifetimeUrns.size,
+        pendingFlushScheduled: !!pendingStatsFlush,
+        pendingNewKeys: pendingNewUrns.length,
       });
     });
     const helper = document.createElement("script");
