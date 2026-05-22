@@ -15,7 +15,7 @@ Includes a uBlock-style **element picker** for the occasional post that slips th
 
 | Browser | Status | Install method |
 |---|---|---|
-| ![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=fff) | ✅ **Primary target** | Temporary add-on via `about:debugging` |
+| ![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=fff) | ✅ Supported | Temporary add-on via `about:debugging` |
 | ![Chrome](https://img.shields.io/badge/Chrome-4285F4?logo=googlechrome&logoColor=fff) | ✅ Supported | Unpacked via `chrome://extensions` |
 | ![Edge](https://img.shields.io/badge/Edge-0078D7?logo=microsoftedge&logoColor=fff) | ✅ Should work | Unpacked via `edge://extensions` (Chromium) |
 | ![Brave](https://img.shields.io/badge/Brave-FB542B?logo=brave&logoColor=fff) | ✅ Should work | Unpacked via `brave://extensions` (Chromium) |
