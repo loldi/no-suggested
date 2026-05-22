@@ -56,10 +56,10 @@ Ordered roughly by what's most likely to ship next.
 | Feature | Effort | Notes |
 |---|---|---|
 | Hide "Promoted" / sponsored posts | Tiny | Same `[role="listitem"]` pattern, just a different label |
-| Pause for 1 hour | Small | Timestamp in storage, content script bails until expiry |
+| Self-like post removal | Small | Hide posts where the author liked their own content |
 | Export / import kill list as JSON | Small | Popup button reads/writes `chrome.storage.local` |
 | Keyword muting ("thrilled to announce" etc.) | Medium | Text-pattern filters editable in the popup |
-| AMO-signed Firefox build | Medium | Mozilla account + multi-day review, for permanent install |
+| Officially distributed Chrome/Firefox builds | Medium | Store listings so install doesn't require unpacked/temporary add-on loading |
 | Cloud sync via `chrome.storage.sync` | Medium | Roams the kill list across signed-in browsers |
 | Per-site config | Large | Only if we ever expand beyond LinkedIn |
 | Custom CSS overrides | Large | Power-user filter list, like uBlock's "My filters" |
