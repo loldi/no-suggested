@@ -7,9 +7,14 @@
 [![Code size](https://img.shields.io/github/languages/code-size/loldi/no-suggested)](https://github.com/loldi/no-suggested)
 [![Downloads](https://img.shields.io/github/downloads/loldi/no-suggested/total?color=8b5cf6)](https://github.com/loldi/no-suggested/releases)
 
-A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. ~270 lines of vanilla JS, zero dependencies, zero telemetry.
+A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. Vanilla JS, zero dependencies, zero telemetry.
 
-Includes a uBlock-style **element picker** for the occasional post that slips through: click the extension icon (or press `Alt+Shift+H`), hover any post, click to permanently hide it. The pick is fingerprinted by author and post URN, so future posts from the same account also get nuked.
+**What you get**
+
+- Auto-hides every feed card labeled **Suggested**
+- A uBlock-style **element picker** (press `Alt+Shift+H`) to nuke any other post — fingerprinted by author + post URN so future posts from the same account also disappear
+- Toolbar **popup**: master on/off switch, live stats, recently-nuked list with one-click undo
+- Toolbar **badge counter** showing how many cards have been hidden on the current page
 
 ## Supported browsers
 
@@ -39,11 +44,20 @@ Includes a uBlock-style **element picker** for the occasional post that slips th
 3. Click **Load unpacked**
 4. Select this folder (`no-suggested`)
 
+## The popup
+
+Click the toolbar icon to open it:
+
+- **On/off toggle** in the header — turns hiding off entirely (page un-hides immediately)
+- **Stats** — total hidden, Suggested-auto count, manually-nuked count
+- **Pick a post to nuke** button — activates the picker (same as `Alt+Shift+H`)
+- **Recently nuked** list — every manual kill with a one-click `×` to restore
+
 ## Element picker (the eyedropper)
 
 When a non-Suggested slop card slips through:
 
-1. **Activate**: click the extension's toolbar icon, or press `Alt+Shift+H` on the LinkedIn tab.
+1. **Activate**: press `Alt+Shift+H`, or click "Pick a post to nuke" in the popup.
 2. The cursor becomes a crosshair and a toast appears top-right.
 3. **Hover** any post: it gets a red outline.
 4. **Click** to nuke it permanently.
@@ -57,11 +71,7 @@ What gets stored (in `chrome.storage.local`):
 | `author` | profile/company URL slug | Hides all future posts from this account |
 | `textSnippet` | first 120 chars of post text | Fallback when no urn/author found |
 
-To clear the kill list:
-
-```js
-chrome.storage.local.remove('no-suggested-kills');
-```
+To restore individual posts, click `×` next to the entry in the popup's "Recently nuked" list. To clear everything, use the popup's **Clear all** link.
 
 ## How it works
 
@@ -74,6 +84,16 @@ LinkedIn changes CSS class names constantly, but the **Suggested** label text is
 5. Mutation bursts are **coalesced** into one scan per animation frame.
 
 Inspired by uBlock Origin's cosmetic filtering perf patterns.
+
+## Regenerating the icon
+
+The icon is drawn programmatically by `tools/make_icons.py` (Pillow required). Re-run after tweaking the design:
+
+```bash
+python tools/make_icons.py
+```
+
+Outputs `icons/icon{16,32,48,96,128}.png`.
 
 ## Debugging (when a Suggested post still shows)
 

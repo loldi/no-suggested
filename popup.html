@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>No Suggested</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="row header">
+      <div class="title">
+        <img src="icons/icon32.png" alt="" class="logo" />
+        <h1>No Suggested</h1>
+      </div>
+      <label class="toggle" title="Enable / disable hiding">
+        <input id="enabled-toggle" type="checkbox" checked />
+        <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      </label>
+    </header>
+
+    <section id="status-banner" class="banner" hidden>
+      Disabled. LinkedIn shows all posts as-is.
+    </section>
+
+    <section class="stats">
+      <div class="stat">
+        <span class="stat-num" id="stat-total">0</span>
+        <span class="stat-label">total hidden</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-suggested">0</span>
+        <span class="stat-label">Suggested</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num" id="stat-manual">0</span>
+        <span class="stat-label">nuked</span>
+      </div>
+    </section>
+
+    <button id="pick-btn" class="primary" type="button">
+      Pick a post to nuke
+      <kbd>Alt+Shift+H</kbd>
+    </button>
+
+    <section class="kill-section">
+      <div class="row section-head">
+        <h2>Recently nuked</h2>
+        <button id="clear-all-btn" class="link-btn" type="button" hidden>Clear all</button>
+      </div>
+      <ul id="kill-list" class="kill-list">
+        <li class="empty">No manual kills yet. Use the picker above.</li>
+      </ul>
+    </section>
+
+    <footer class="footer">
+      <a href="https://github.com/loldi/no-suggested" target="_blank" rel="noreferrer">github.com/loldi/no-suggested</a>
+      <span id="version-tag"></span>
+    </footer>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

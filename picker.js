@@ -146,7 +146,6 @@
     const kills = await loadKills();
     kills.push({ ...fp, ts: Date.now() });
     await chrome.storage.local.set({ [STORE_KEY]: kills });
-    window.dispatchEvent(new CustomEvent("no-suggested-kills-updated"));
   }
 
   document.addEventListener("mouseover", onMouseMove, true);
