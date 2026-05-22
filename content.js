@@ -13,11 +13,16 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
-  const STORE_KEY = "no-suggested-kills";
+
+  const KEYS = {
+    enabled: "no-suggested-enabled",
+    kills: "no-suggested-kills",
+    stats: "no-suggested-stats",
+  };
 
   const SUGGESTED_TEXT = new Set([
     "Suggested",
@@ -26,11 +31,16 @@
   ]);
 
   const LIST_ITEM_SELECTOR = '[role="listitem"]';
+
   let seen = new WeakSet();
   const pending = new Set();
   let scanScheduled = false;
-  let totalHidden = 0;
+
+  let enabled = true;
   let kills = [];
+  let pageHidden = 0;
+  let pendingStatsFlush = null;
+  let pendingStatsDelta = 0;
 
   function isDebug() {
     try { return localStorage.getItem(DEBUG_KEY) === "1"; } catch { return false; }
@@ -69,7 +79,6 @@
     return (item.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120);
   }
 
-  /** Does this item match any user-nuked fingerprint? */
   function matchesKill(item) {
     if (!kills.length) return false;
     const urn = urnOf(item);
@@ -87,39 +96,77 @@
     return false;
   }
 
-  function hide(item) {
-    if (item.getAttribute(HIDDEN_ATTR) === "1") return false;
-    item.setAttribute(HIDDEN_ATTR, "1");
-    item.setAttribute("aria-hidden", "true");
-    totalHidden++;
+  function setHidden(item, on) {
+    if (on) {
+      if (item.getAttribute(HIDDEN_ATTR) === "1") return false;
+      item.setAttribute(HIDDEN_ATTR, "1");
+      item.setAttribute("aria-hidden", "true");
+      pageHidden++;
+      return true;
+    }
+    if (item.getAttribute(HIDDEN_ATTR) !== "1") return false;
+    item.removeAttribute(HIDDEN_ATTR);
+    item.removeAttribute("aria-hidden");
+    pageHidden = Math.max(0, pageHidden - 1);
     return true;
   }
 
+  function scheduleStatsFlush(delta) {
+    pendingStatsDelta += delta;
+    if (pendingStatsFlush) return;
+    pendingStatsFlush = setTimeout(async () => {
+      const inc = pendingStatsDelta;
+      pendingStatsDelta = 0;
+      pendingStatsFlush = null;
+      if (inc <= 0) return;
+      try {
+        const result = await chrome.storage.local.get(KEYS.stats);
+        const stats = result[KEYS.stats] || { suggestedHidden: 0 };
+        stats.suggestedHidden = (stats.suggestedHidden || 0) + inc;
+        await chrome.storage.local.set({ [KEYS.stats]: stats });
+      } catch (e) {
+        debug("stats flush failed:", e);
+      }
+    }, 1500);
+  }
+
+  function notifyBadge() {
+    chrome.runtime?.sendMessage?.({
+      type: "no-suggested:badge",
+      enabled,
+      count: pageHidden,
+    }).catch(() => {});
+  }
+
   function scan(root) {
+    if (!enabled) return 0;
     if (!root || root.nodeType !== Node.ELEMENT_NODE) return 0;
     const items = root.matches?.(LIST_ITEM_SELECTOR)
       ? [root, ...root.querySelectorAll(LIST_ITEM_SELECTOR)]
       : root.querySelectorAll(LIST_ITEM_SELECTOR);
-    let hidden = 0;
+    let suggestedHidden = 0;
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (seen.has(item)) continue;
       seen.add(item);
-      if ((isSuggested(item) || matchesKill(item)) && hide(item)) hidden++;
+      const suggested = isSuggested(item);
+      if (suggested || matchesKill(item)) {
+        if (setHidden(item, true) && suggested) suggestedHidden++;
+      }
     }
-    return hidden;
+    if (suggestedHidden) scheduleStatsFlush(suggestedHidden);
+    return suggestedHidden;
   }
 
   function runPending() {
     scanScheduled = false;
-    let hidden = 0;
     if (pending.size === 0) {
-      hidden += scan(document.body);
+      scan(document.body);
     } else {
-      for (const root of pending) hidden += scan(root);
+      for (const root of pending) scan(root);
       pending.clear();
     }
-    if (hidden && isDebug()) debug("hid", hidden, "total", totalHidden);
+    notifyBadge();
   }
 
   function scheduleScan(root) {
@@ -143,19 +190,46 @@
     if (dirty) scheduleScan(null);
   }
 
-  /** When picker saves a new kill, drop the seen cache so items re-evaluate. */
-  function rescanAll() {
-    pending.clear();
+  /** Re-evaluate every currently hidden item: un-hide if it no longer matches. */
+  function unhideStale() {
+    const hidden = document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`);
+    let restored = 0;
+    for (let i = 0; i < hidden.length; i++) {
+      const item = hidden[i];
+      if (!isSuggested(item) && !matchesKill(item)) {
+        setHidden(item, false);
+        restored++;
+      }
+    }
+    return restored;
+  }
+
+  function showAll() {
+    const hidden = document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`);
+    for (let i = 0; i < hidden.length; i++) setHidden(hidden[i], false);
+    pageHidden = 0;
+  }
+
+  function reapplyAll() {
+    if (!enabled) {
+      showAll();
+      notifyBadge();
+      return;
+    }
+    unhideStale();
     seen = new WeakSet();
+    pending.clear();
     scheduleScan(document.body);
   }
 
-  async function loadKills() {
+  async function loadState() {
     try {
-      const result = await chrome.storage.local.get(STORE_KEY);
-      kills = Array.isArray(result[STORE_KEY]) ? result[STORE_KEY] : [];
-      debug("kills loaded:", kills.length);
-    } catch (e) {
+      const result = await chrome.storage.local.get([KEYS.enabled, KEYS.kills]);
+      enabled = result[KEYS.enabled] !== false;
+      kills = Array.isArray(result[KEYS.kills]) ? result[KEYS.kills] : [];
+      debug("loaded state: enabled=", enabled, "kills=", kills.length);
+    } catch {
+      enabled = true;
       kills = [];
     }
   }
@@ -179,18 +253,14 @@
       console.log(LOG, "DIAG", {
         version: VERSION,
         url: location.href,
+        enabled,
         listItems: items.length,
         suggestedHits: suggested,
         killMatches: killed,
         storedKills: kills.length,
         hidden: document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`).length,
-        totalHidden,
+        pageHidden,
       });
-    });
-    window.addEventListener("no-suggested-kills-updated", async () => {
-      await loadKills();
-      // WeakSet has no clear(); rebuild reference instead.
-      rescanAll();
     });
     const helper = document.createElement("script");
     helper.textContent = "window.noSuggestedDiag=function(){window.dispatchEvent(new Event('no-suggested-diag'));};";
@@ -199,17 +269,23 @@
   }
 
   chrome.storage?.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes[STORE_KEY]) {
-      kills = Array.isArray(changes[STORE_KEY].newValue) ? changes[STORE_KEY].newValue : [];
-      debug("kills updated:", kills.length);
-      rescanAll();
+    if (area !== "local") return;
+    if (changes[KEYS.enabled]) {
+      enabled = changes[KEYS.enabled].newValue !== false;
+      debug("enabled changed:", enabled);
+      reapplyAll();
+    }
+    if (changes[KEYS.kills]) {
+      kills = Array.isArray(changes[KEYS.kills].newValue) ? changes[KEYS.kills].newValue : [];
+      debug("kills changed:", kills.length);
+      reapplyAll();
     }
   });
 
   console.log(LOG, "active v" + VERSION);
   installDiagHook();
 
-  loadKills().then(() => {
+  loadState().then(() => {
     if (document.readyState === "loading") {
       document.addEventListener("DOMContentLoaded", start, { once: true });
     } else {

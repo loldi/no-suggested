@@ -1,18 +1,23 @@
 {
   "manifest_version": 3,
   "name": "No Suggested",
-  "version": "1.0.0",
-  "description": "Hides LinkedIn \"Suggested\" posts. Click the icon or press Alt+Shift+H to nuke any post that slips through.",
+  "version": "1.1.0",
+  "description": "Hides LinkedIn \"Suggested\" posts. Includes a uBlock-style picker for the slop that slips through.",
   "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
     "48": "icons/icon48.png",
-    "96": "icons/icon96.png"
+    "96": "icons/icon96.png",
+    "128": "icons/icon128.png"
   },
   "permissions": ["storage"],
   "action": {
-    "default_title": "Toggle No Suggested picker (Alt+Shift+H)",
+    "default_title": "No Suggested",
+    "default_popup": "popup.html",
     "default_icon": {
-      "48": "icons/icon48.png",
-      "96": "icons/icon96.png"
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
     }
   },
   "background": {
