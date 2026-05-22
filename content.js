@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.1.3";
+  const VERSION = "1.1.4";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -302,33 +302,15 @@
     }
   }
 
-  function pickObserverScope() {
-    return document.querySelector("main") || document.body || document.documentElement;
-  }
-
-  function startObserving() {
-    const scope = pickObserverScope();
-    if (scope === observerScope && observer) return;
+  function start() {
+    // Observe the whole document. LinkedIn can re-mount <main> during route
+    // changes, so narrowing the scope is fragile. The 60ms debounce keeps us
+    // off LinkedIn's bootstrap critical path even with this wide observer.
     if (observer) observer.disconnect();
     observer = new MutationObserver(onMutations);
-    observer.observe(scope, { childList: true, subtree: true });
-    observerScope = scope;
-    debug("observing", scope.tagName);
-  }
-
-  function ensureScopeAlive() {
-    if (!observerScope || !observerScope.isConnected) {
-      debug("scope vanished, re-locating");
-      startObserving();
-    }
-  }
-
-  function start() {
-    startObserving();
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    observerScope = document.documentElement;
     scheduleScan(document.body, { immediate: true });
-    // LinkedIn occasionally re-mounts <main> on route changes; check
-    // periodically and re-observe if the scope element was replaced.
-    setInterval(ensureScopeAlive, 5000);
     debug("started v" + VERSION);
   }
 
