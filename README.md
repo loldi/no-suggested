@@ -1,10 +1,26 @@
 # No Suggested
 
-A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. Works in Chrome and Firefox (Manifest V3).
+[![Release](https://img.shields.io/github/v/release/loldi/no-suggested?label=release&color=ef4444)](https://github.com/loldi/no-suggested/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Manifest V3](https://img.shields.io/badge/manifest-v3-f97316)](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json)
+[![Dependencies](https://img.shields.io/badge/dependencies-zero-22c55e)](#)
+[![Code size](https://img.shields.io/github/languages/code-size/loldi/no-suggested)](https://github.com/loldi/no-suggested)
+[![Downloads](https://img.shields.io/github/downloads/loldi/no-suggested/total?color=8b5cf6)](https://github.com/loldi/no-suggested/releases)
 
-No accounts, no analytics, no options screen — it just runs on `linkedin.com` and removes those algorithmic slop cards as they load.
+A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. ~270 lines of vanilla JS, zero dependencies, zero telemetry.
 
 Includes a uBlock-style **element picker** for the occasional post that slips through: click the extension icon (or press `Alt+Shift+H`), hover any post, click to permanently hide it. The pick is fingerprinted by author and post URN, so future posts from the same account also get nuked.
+
+## Supported browsers
+
+| Browser | Status | Install method |
+|---|---|---|
+| ![Firefox](https://img.shields.io/badge/Firefox-FF7139?logo=firefoxbrowser&logoColor=fff) | ✅ **Primary target** | Temporary add-on via `about:debugging` |
+| ![Chrome](https://img.shields.io/badge/Chrome-4285F4?logo=googlechrome&logoColor=fff) | ✅ Supported | Unpacked via `chrome://extensions` |
+| ![Edge](https://img.shields.io/badge/Edge-0078D7?logo=microsoftedge&logoColor=fff) | ✅ Should work | Unpacked via `edge://extensions` (Chromium) |
+| ![Brave](https://img.shields.io/badge/Brave-FB542B?logo=brave&logoColor=fff) | ✅ Should work | Unpacked via `brave://extensions` (Chromium) |
+| ![Opera](https://img.shields.io/badge/Opera-FF1B2D?logo=opera&logoColor=fff) | ⚠️ Untested | Unpacked via `opera://extensions` (Chromium) |
+| ![Safari](https://img.shields.io/badge/Safari-000000?logo=safari&logoColor=fff) | ❌ Not supported | Would require Xcode conversion |
 
 ## Install (unpacked)
 
