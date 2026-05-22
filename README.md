@@ -49,24 +49,21 @@ A tiny browser extension that hides LinkedIn **Suggested** posts from your feed.
 | WeakSet seen-items cache | ✅ | Skips re-checking known list items |
 | Stats writes debounced | ✅ | 1.5 s flush, never on the hot scan path |
 
-### Out of scope (intentional)
+### Planned roadmap features
 
-| Feature | Why not |
-|---|---|
-| Keyword muting ("thrilled to announce" etc.) | Scope creep — other extensions do this well |
-| Cloud sync of kill list | Locks you into one browser account; export/import would be cleaner |
-| AMO-signed Firefox build | Mozilla account + multi-day review; temp add-on works fine |
-| Safari support | Requires Xcode conversion, not worth it for a personal tool |
-| Per-site config | LinkedIn-only by design |
-| Custom CSS overrides | YAGNI — file an issue if you need it |
+Ordered roughly by what's most likely to ship next.
 
-### Could add later (small lifts)
-
-| Feature | Effort |
-|---|---|
-| Hide "Promoted" / sponsored posts | Tiny — same `[role="listitem"]` pattern |
-| Pause for 1 hour | Small — timestamp in storage, content script bails until expiry |
-| Export / import kill list as JSON | Small — popup button reads/writes `chrome.storage.local` |
+| Feature | Effort | Notes |
+|---|---|---|
+| Hide "Promoted" / sponsored posts | Tiny | Same `[role="listitem"]` pattern, just a different label |
+| Pause for 1 hour | Small | Timestamp in storage, content script bails until expiry |
+| Export / import kill list as JSON | Small | Popup button reads/writes `chrome.storage.local` |
+| Keyword muting ("thrilled to announce" etc.) | Medium | Text-pattern filters editable in the popup |
+| AMO-signed Firefox build | Medium | Mozilla account + multi-day review, for permanent install |
+| Cloud sync via `chrome.storage.sync` | Medium | Roams the kill list across signed-in browsers |
+| Per-site config | Large | Only if we ever expand beyond LinkedIn |
+| Custom CSS overrides | Large | Power-user filter list, like uBlock's "My filters" |
+| Safari support | Large | Xcode WebExtension converter project |
 
 ## Supported browsers
 
