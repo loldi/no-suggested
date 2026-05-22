@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.1.2";
+  const VERSION = "1.1.3";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -43,6 +43,16 @@
   let pendingStatsFlush = null;
   let pendingNewUrns = [];
   const URN_CAP = 50000;
+
+  // Perf: throttle scans triggered by DOM mutations. 60ms is below human
+  // perception but lets LinkedIn's bootstrap, scroll handlers, and other
+  // event loops breathe between our work.
+  const SCAN_DEBOUNCE_MS = 60;
+  let scanCount = 0;
+  let totalScanMs = 0;
+  let maxScanMs = 0;
+  let observer = null;
+  let observerScope = null;
 
   function isDebug() {
     try { return localStorage.getItem(DEBUG_KEY) === "1"; } catch { return false; }
@@ -182,22 +192,51 @@
     return newlyCounted;
   }
 
+  /** Collapse `pending` so we don't double-scan when a parent and child are
+   *  both queued. Keeps the highest-level roots only. */
+  function consolidatePending() {
+    if (pending.size <= 1) return;
+    const roots = [...pending];
+    pending.clear();
+    for (const node of roots) {
+      let redundant = false;
+      for (const other of pending) {
+        if (other !== node && other.contains?.(node)) { redundant = true; break; }
+      }
+      if (redundant) continue;
+      for (const other of [...pending]) {
+        if (node.contains?.(other) && other !== node) pending.delete(other);
+      }
+      pending.add(node);
+    }
+  }
+
   function runPending() {
     scanScheduled = false;
+    const started = performance.now();
+    consolidatePending();
     if (pending.size === 0) {
       scan(document.body);
     } else {
       for (const root of pending) scan(root);
       pending.clear();
     }
+    const elapsed = performance.now() - started;
+    scanCount++;
+    totalScanMs += elapsed;
+    if (elapsed > maxScanMs) maxScanMs = elapsed;
     notifyBadge();
   }
 
-  function scheduleScan(root) {
+  function scheduleScan(root, { immediate = false } = {}) {
     if (root) pending.add(root);
     if (scanScheduled) return;
     scanScheduled = true;
-    requestAnimationFrame(runPending);
+    if (immediate) {
+      requestAnimationFrame(runPending);
+    } else {
+      setTimeout(runPending, SCAN_DEBOUNCE_MS);
+    }
   }
 
   function onMutations(mutations) {
@@ -263,10 +302,33 @@
     }
   }
 
+  function pickObserverScope() {
+    return document.querySelector("main") || document.body || document.documentElement;
+  }
+
+  function startObserving() {
+    const scope = pickObserverScope();
+    if (scope === observerScope && observer) return;
+    if (observer) observer.disconnect();
+    observer = new MutationObserver(onMutations);
+    observer.observe(scope, { childList: true, subtree: true });
+    observerScope = scope;
+    debug("observing", scope.tagName);
+  }
+
+  function ensureScopeAlive() {
+    if (!observerScope || !observerScope.isConnected) {
+      debug("scope vanished, re-locating");
+      startObserving();
+    }
+  }
+
   function start() {
-    const observer = new MutationObserver(onMutations);
-    observer.observe(document.documentElement, { childList: true, subtree: true });
-    scheduleScan(document.body);
+    startObserving();
+    scheduleScan(document.body, { immediate: true });
+    // LinkedIn occasionally re-mounts <main> on route changes; check
+    // periodically and re-observe if the scope element was replaced.
+    setInterval(ensureScopeAlive, 5000);
     debug("started v" + VERSION);
   }
 
@@ -296,6 +358,10 @@
         lifetimeSize: lifetimeUrns.size,
         pendingFlushScheduled: !!pendingStatsFlush,
         pendingNewKeys: pendingNewUrns.length,
+        observerScope: observerScope?.tagName || null,
+        scanCount,
+        avgScanMs: scanCount ? +(totalScanMs / scanCount).toFixed(2) : 0,
+        maxScanMs: +maxScanMs.toFixed(2),
       });
     });
     const helper = document.createElement("script");
