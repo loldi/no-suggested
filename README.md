@@ -2,68 +2,49 @@
 
 [![Release](https://img.shields.io/github/v/release/loldi/no-suggested?label=release&color=ef4444)](https://github.com/loldi/no-suggested/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Manifest V3](https://img.shields.io/badge/manifest-v3-f97316)](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json)
 [![Dependencies](https://img.shields.io/badge/dependencies-zero-22c55e)](#)
-[![Code size](https://img.shields.io/github/languages/code-size/loldi/no-suggested)](https://github.com/loldi/no-suggested)
 [![Downloads](https://img.shields.io/github/downloads/loldi/no-suggested/total?color=8b5cf6)](https://github.com/loldi/no-suggested/releases)
 
-A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. Vanilla JS, zero dependencies, zero telemetry.
+A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. No accounts, no telemetry, no dependencies.
 
 **What you get**
 
 - Auto-hides every feed card labeled **Suggested**
-- A uBlock-style **element picker** (press `Alt+Shift+H`) to nuke any other post — fingerprinted by author + post URN so future posts from the same account also disappear
-- Toolbar **popup**: master on/off switch, live stats, recently-nuked list with one-click undo
-- Toolbar **badge counter** showing how many cards have been hidden on the current page (toggleable)
+- **Manual block** picker (`Alt+Shift+H`) for anything else that slips through — blocked by author when possible, so future posts from that account disappear too
+- Toolbar **popup**: on/off switch, live stats, manual block list with one-click undo
+- Optional **badge counter** on the toolbar icon (toggle in the popup)
 
 ## Feature matrix
 
 ### Hiding
 
-| Capability | Status | Notes |
-|---|---|---|
-| Auto-hide "Suggested" feed cards | ✅ | Text-based detection, survives LinkedIn DOM churn |
-| Element picker (click-to-nuke) | ✅ | `Alt+Shift+H` or popup button, red outline preview |
-| Author-level blocking | ✅ | Nuking once also hides all future posts from that account |
-| Snippet fallback for posts without URN | ✅ | Catches scroll-loaded cards before LinkedIn attaches `data-urn` |
-| Persists across sessions | ✅ | `chrome.storage.local`, survives reloads + Firefox restarts |
+| Capability | Status |
+|---|---|
+| Auto-hide "Suggested" feed cards | ✅ |
+| Manual block picker | ✅ |
+| Block by author (future posts from same account) | ✅ |
+| Persists across browser restarts | ✅ |
 
 ### Popup / settings
 
-| Capability | Status | Notes |
-|---|---|---|
-| Master on/off toggle | ✅ | Hidden posts un-hide instantly when switched off |
-| "Show count on toolbar icon" toggle | ✅ | For when you want the icon clean |
-| Live stats: this page / lifetime / nuked | ✅ | Lifetime is URN-deduplicated |
-| Recently nuked list | ✅ | Sorted by time, one entry per kill |
-| Undo individual kills | ✅ | `×` button next to each kill restores that post |
-| Clear all kills | ✅ | Single link in the popup header |
+| Capability | Status |
+|---|---|
+| Master on/off toggle | ✅ |
+| "Show count on toolbar icon" toggle | ✅ |
+| Live stats: this page / lifetime / manual blocks | ✅ |
+| Manual block list with undo | ✅ |
+| Clear all manual blocks | ✅ |
 
-### Performance
+### Planned features
 
-| Capability | Status | Notes |
-|---|---|---|
-| CSS-based hiding | ✅ | Injected at `document_start`, no JS layout work |
-| Debounced mutation handling | ✅ | 60 ms `setTimeout`, coalesces LinkedIn's mutation bursts |
-| Pending-root consolidation | ✅ | Drops descendant roots before scanning |
-| WeakSet seen-items cache | ✅ | Skips re-checking known list items |
-| Stats writes debounced | ✅ | 1.5 s flush, never on the hot scan path |
-
-### Planned roadmap features
-
-Ordered roughly by what's most likely to ship next.
-
-| Feature | Effort | Notes |
-|---|---|---|
-| Hide "Promoted" / sponsored posts | Tiny | Same `[role="listitem"]` pattern, just a different label |
-| Self-like post removal | Small | Hide posts where the author liked their own content |
-| Export / import kill list as JSON | Small | Popup button reads/writes `chrome.storage.local` |
-| Keyword muting ("thrilled to announce" etc.) | Medium | Text-pattern filters editable in the popup |
-| Officially distributed Chrome/Firefox builds | Medium | Store listings so install doesn't require unpacked/temporary add-on loading |
-| Cloud sync via `chrome.storage.sync` | Medium | Roams the kill list across signed-in browsers |
-| Per-site config | Large | Only if we ever expand beyond LinkedIn |
-| Custom CSS overrides | Large | Power-user filter list, like uBlock's "My filters" |
-| Safari support | Large | Xcode WebExtension converter project |
+| Feature | Notes |
+|---|---|
+| Hide "Promoted" / sponsored posts | Same approach as Suggested |
+| Self-like post removal | Hide posts where the author liked their own content |
+| Export / import manual block list | Backup or move to another machine |
+| Keyword muting ("thrilled to announce" etc.) | User-defined word filters in the popup |
+| Officially distributed Chrome/Firefox builds | Install from a store, no unpacked loading |
+| Cloud sync of block list | Same blocks across signed-in browsers |
 
 ## Supported browsers
 
@@ -76,100 +57,50 @@ Ordered roughly by what's most likely to ship next.
 | ![Opera](https://img.shields.io/badge/Opera-FF1B2D?logo=opera&logoColor=fff) | ⚠️ Untested | Unpacked via `opera://extensions` (Chromium) |
 | ![Safari](https://img.shields.io/badge/Safari-000000?logo=safari&logoColor=fff) | ❌ Not supported | Would require Xcode conversion |
 
-## Install (unpacked)
+## Install
+
+Grab the latest zip from [Releases](https://github.com/loldi/no-suggested/releases/latest), unzip, then:
 
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on…**
-3. Choose `manifest.json` in this folder
+3. Choose `manifest.json` in the unzipped folder
 
-> Temporary add-ons disappear when Firefox restarts. For a permanent install, use [Firefox Add-on signing](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) or keep loading unpacked via `about:debugging`. Your kill list in `storage.local` persists across reloads either way.
+> Temporary add-ons disappear when Firefox restarts. Reload the same way after a restart. Your manual block list stays saved in the browser.
 
 ### Chrome / Edge / Brave
 
-1. Open `chrome://extensions`
+1. Open `chrome://extensions` (or `edge://extensions` / `brave://extensions`)
 2. Enable **Developer mode**
 3. Click **Load unpacked**
-4. Select this folder (`no-suggested`)
+4. Select the unzipped folder
 
 ## The popup
 
-Click the toolbar icon to open it:
+Click the toolbar icon:
 
-- **On/off toggle** in the header — turns filtering off entirely (page un-hides immediately)
-- **Inline stats** — `this page` / `lifetime` / `manual blocks` as a single line
-- **Explainer + manual block button** — short copy on what auto-hide vs manual block means, then **Block a post manually** (`Alt+Shift+H`)
-- **Manual blocks** list — every manual block with a one-click **Undo**
-- **Show count on toolbar icon** checkbox — controls the badge counter
+- **On/off toggle** — turns filtering off (hidden posts reappear immediately)
+- **Inline stats** — `this page` / `lifetime` / `manual blocks`
+- **Block a post manually** — starts the picker (`Alt+Shift+H`)
+- **Manual blocks** list — undo any block individually, or clear all
+- **Show count on toolbar icon** — optional badge with the current page count
 
-## Element picker (the eyedropper)
+## Manual block picker
 
-When a non-Suggested slop card slips through:
+When a non-Suggested post slips through:
 
-1. **Activate**: press `Alt+Shift+H`, or click "Pick a post to nuke" in the popup.
-2. The cursor becomes a crosshair and a toast appears top-right.
-3. **Hover** any post: it gets a red outline.
-4. **Click** to nuke it permanently.
-5. `ESC` to cancel without picking.
+1. Press `Alt+Shift+H`, or click **Block a post manually** in the popup
+2. Cursor becomes a crosshair; a toast appears top-right
+3. Hover a post for a red outline
+4. Click to block it permanently
+5. `ESC` to cancel
 
-What gets stored (in `chrome.storage.local`):
-
-| Field | Source | Effect |
-|---|---|---|
-| `activityUrn` | `data-urn` on the post | Hides this exact post |
-| `author` | profile/company URL slug | Hides all future posts from this account |
-| `textSnippet` | first 120 chars of post text | Fallback when no urn/author found |
-
-To restore individual posts, click `×` next to the entry in the popup's "Recently nuked" list. To clear everything, use the popup's **Clear all** link.
+Blocks are saved locally in your browser. When possible, the extension remembers the **author** so their future posts stay hidden too.
 
 ## How it works
 
-LinkedIn changes CSS class names constantly, but the **Suggested** label text is stable, and feed cards are wrapped in `[role="listitem"]`. The extension:
-
-1. **CSS file** (`hide.css`) is injected at `document_start` — the CSS engine hides anything with `[data-no-suggested-hidden="1"]` before paint. No JS layout work.
-2. **Content script** finds every `[role="listitem"]` in the feed, checks for a "Suggested" header span, and marks matches with the data attribute.
-3. **MutationObserver** watches the document for new feed items, coalesces bursts into one scan per 60 ms.
-4. **`consolidatePending()`** drops descendant roots so we don't re-scan the same subtree multiple times.
-5. **WeakSet** of already-checked list items means we never re-process the same node.
-
-Inspired by uBlock Origin's cosmetic filtering perf patterns.
-
-## Regenerating the icon
-
-The icon is **concept C** (dark tile, gray feed lines, red middle line). Drawn by `tools/make_icons.py` (Pillow). Re-run after tweaking:
-
-```bash
-python tools/make_icons.py
-```
-
-Outputs `icons/icon{16,32,48,96,128}.png`.
-
-## Debugging (when a Suggested post still shows)
-
-1. Reload the extension at `chrome://extensions` (click the refresh icon on the card).
-2. On LinkedIn, open DevTools → **Console**.
-3. You should see: `[No Suggested] extension active on ...` — if not, the content script is not running.
-4. Enable verbose mode and reload:
-
-```js
-localStorage.setItem('no-suggested-debug', '1');
-location.reload();
-```
-
-5. After the feed loads, run:
-
-```js
-noSuggestedDiag()
-```
-
-6. Copy the `[No Suggested] DIAG { ... }` line and paste it back for analysis.
-
-To turn debug off: `localStorage.removeItem('no-suggested-debug'); location.reload();`
-
-## If LinkedIn changes the label
-
-Edit `SUGGESTED_TEXT` in `content.js` and add any new strings you see in the UI.
+LinkedIn renames CSS classes constantly, but the word **Suggested** on a feed card is stable. The extension watches the feed, marks matching cards as hidden, and keeps working as you scroll. Manual blocks are stored locally and re-applied every time you visit LinkedIn.
 
 ## License
 
