@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "No Suggested",
+  "version": "1.2.0",
+  "description": "Hides LinkedIn \"Suggested\" posts. Click the icon or press Alt+Shift+H to nuke any post that slips through.",
+  "icons": {
+    "48": "icons/icon48.png",
+    "96": "icons/icon96.png"
+  },
+  "permissions": ["storage"],
+  "action": {
+    "default_title": "Toggle No Suggested picker (Alt+Shift+H)",
+    "default_icon": {
+      "48": "icons/icon48.png",
+      "96": "icons/icon96.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"]
+  },
+  "commands": {
+    "toggle-picker": {
+      "suggested_key": {
+        "default": "Alt+Shift+H"
+      },
+      "description": "Toggle the No Suggested element picker"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.linkedin.com/*"],
+      "css": ["hide.css", "picker.css"],
+      "js": ["content.js", "picker.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "no-suggested@andrew.local",
+      "strict_min_version": "109.0"
+    }
+  }
+}

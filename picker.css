@@ -1,0 +1,37 @@
+/* Picker mode visual feedback. Only active while body has the toggle class. */
+html.no-suggested-picker-active,
+html.no-suggested-picker-active body {
+  cursor: crosshair !important;
+}
+
+.no-suggested-picker-highlight {
+  outline: 3px solid #ef4444 !important;
+  outline-offset: -3px !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+  cursor: crosshair !important;
+}
+
+#no-suggested-picker-toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483647;
+  background: #111;
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+#no-suggested-picker-toast[data-visible="1"] {
+  opacity: 1;
+}
+
+#no-suggested-picker-toast strong {
+  color: #ef4444;
+}

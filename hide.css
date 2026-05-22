@@ -1,0 +1,5 @@
+/* Injected at document_start: the CSS engine hides flagged cards
+   the instant JS marks them, no JS-driven layout work. */
+[data-no-suggested-hidden="1"] {
+  display: none !important;
+}
