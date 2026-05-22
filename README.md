@@ -14,7 +14,59 @@ A tiny browser extension that hides LinkedIn **Suggested** posts from your feed.
 - Auto-hides every feed card labeled **Suggested**
 - A uBlock-style **element picker** (press `Alt+Shift+H`) to nuke any other post — fingerprinted by author + post URN so future posts from the same account also disappear
 - Toolbar **popup**: master on/off switch, live stats, recently-nuked list with one-click undo
-- Toolbar **badge counter** showing how many cards have been hidden on the current page
+- Toolbar **badge counter** showing how many cards have been hidden on the current page (toggleable)
+
+## Feature matrix
+
+### Hiding
+
+| Capability | Status | Notes |
+|---|---|---|
+| Auto-hide "Suggested" feed cards | ✅ | Text-based detection, survives LinkedIn DOM churn |
+| Element picker (click-to-nuke) | ✅ | `Alt+Shift+H` or popup button, red outline preview |
+| Author-level blocking | ✅ | Nuking once also hides all future posts from that account |
+| Snippet fallback for posts without URN | ✅ | Catches scroll-loaded cards before LinkedIn attaches `data-urn` |
+| Persists across sessions | ✅ | `chrome.storage.local`, survives reloads + Firefox restarts |
+
+### Popup / settings
+
+| Capability | Status | Notes |
+|---|---|---|
+| Master on/off toggle | ✅ | Hidden posts un-hide instantly when switched off |
+| "Show count on toolbar icon" toggle | ✅ | For when you want the icon clean |
+| Live stats: this page / lifetime / nuked | ✅ | Lifetime is URN-deduplicated |
+| Recently nuked list | ✅ | Sorted by time, one entry per kill |
+| Undo individual kills | ✅ | `×` button next to each kill restores that post |
+| Clear all kills | ✅ | Single link in the popup header |
+
+### Performance
+
+| Capability | Status | Notes |
+|---|---|---|
+| CSS-based hiding | ✅ | Injected at `document_start`, no JS layout work |
+| Debounced mutation handling | ✅ | 60 ms `setTimeout`, coalesces LinkedIn's mutation bursts |
+| Pending-root consolidation | ✅ | Drops descendant roots before scanning |
+| WeakSet seen-items cache | ✅ | Skips re-checking known list items |
+| Stats writes debounced | ✅ | 1.5 s flush, never on the hot scan path |
+
+### Out of scope (intentional)
+
+| Feature | Why not |
+|---|---|
+| Keyword muting ("thrilled to announce" etc.) | Scope creep — other extensions do this well |
+| Cloud sync of kill list | Locks you into one browser account; export/import would be cleaner |
+| AMO-signed Firefox build | Mozilla account + multi-day review; temp add-on works fine |
+| Safari support | Requires Xcode conversion, not worth it for a personal tool |
+| Per-site config | LinkedIn-only by design |
+| Custom CSS overrides | YAGNI — file an issue if you need it |
+
+### Could add later (small lifts)
+
+| Feature | Effort |
+|---|---|
+| Hide "Promoted" / sponsored posts | Tiny — same `[role="listitem"]` pattern |
+| Pause for 1 hour | Small — timestamp in storage, content script bails until expiry |
+| Export / import kill list as JSON | Small — popup button reads/writes `chrome.storage.local` |
 
 ## Supported browsers
 
@@ -49,9 +101,10 @@ A tiny browser extension that hides LinkedIn **Suggested** posts from your feed.
 Click the toolbar icon to open it:
 
 - **On/off toggle** in the header — turns hiding off entirely (page un-hides immediately)
-- **Stats** — total hidden, Suggested-auto count, manually-nuked count
+- **Stats** — `this page` (live count on current tab) / `lifetime` (unique posts blocked ever, deduped by URN) / `nuked` (manually picked)
 - **Pick a post to nuke** button — activates the picker (same as `Alt+Shift+H`)
-- **Recently nuked** list — every manual kill with a one-click `×` to restore
+- **Recently nuked** list — every manual kill with a one-click `×` to restore that post
+- **Show count on toolbar icon** checkbox — controls the badge counter
 
 ## Element picker (the eyedropper)
 
@@ -79,9 +132,9 @@ LinkedIn changes CSS class names constantly, but the **Suggested** label text is
 
 1. **CSS file** (`hide.css`) is injected at `document_start` — the CSS engine hides anything with `[data-no-suggested-hidden="1"]` before paint. No JS layout work.
 2. **Content script** finds every `[role="listitem"]` in the feed, checks for a "Suggested" header span, and marks matches with the data attribute.
-3. **MutationObserver** watches for new feed items and only re-scans newly added subtrees (not the whole document).
-4. **WeakSet** of already-checked list items means we never re-process the same node.
-5. Mutation bursts are **coalesced** into one scan per animation frame.
+3. **MutationObserver** watches the document for new feed items, coalesces bursts into one scan per 60 ms.
+4. **`consolidatePending()`** drops descendant roots so we don't re-scan the same subtree multiple times.
+5. **WeakSet** of already-checked list items means we never re-process the same node.
 
 Inspired by uBlock Origin's cosmetic filtering perf patterns.
 
