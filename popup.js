@@ -17,14 +17,16 @@
   const els = {
     toggle: document.getElementById("enabled-toggle"),
     banner: document.getElementById("status-banner"),
-    statTotal: document.getElementById("stat-total"),
-    statSuggested: document.getElementById("stat-suggested"),
+    statPage: document.getElementById("stat-page"),
+    statLifetime: document.getElementById("stat-lifetime"),
     statManual: document.getElementById("stat-manual"),
     pickBtn: document.getElementById("pick-btn"),
     killList: document.getElementById("kill-list"),
     clearAll: document.getElementById("clear-all-btn"),
     versionTag: document.getElementById("version-tag"),
   };
+
+  const LINKEDIN_MATCH = /^https:\/\/www\.linkedin\.com\//;
 
   async function getState() {
     const result = await chrome.storage.local.get([KEYS.enabled, KEYS.kills, KEYS.stats]);
@@ -92,17 +94,30 @@
     }
   }
 
+  async function getPageCount() {
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (!tab?.id || !LINKEDIN_MATCH.test(tab.url || "")) return null;
+      const reply = await chrome.tabs.sendMessage(tab.id, {
+        type: "no-suggested:get-page-count",
+      });
+      return typeof reply?.count === "number" ? reply.count : null;
+    } catch {
+      return null;
+    }
+  }
+
   async function refresh() {
-    const { enabled, kills, stats } = await getState();
+    const [state, pageCount] = await Promise.all([getState(), getPageCount()]);
+    const { enabled, kills, stats } = state;
+
     els.toggle.checked = enabled;
     els.banner.hidden = enabled;
     els.pickBtn.disabled = !enabled;
 
-    const suggested = stats.suggestedHidden || 0;
-    const manual = kills.length;
-    els.statTotal.textContent = fmt(suggested + manual);
-    els.statSuggested.textContent = fmt(suggested);
-    els.statManual.textContent = fmt(manual);
+    els.statPage.textContent = pageCount === null ? "—" : fmt(pageCount);
+    els.statLifetime.textContent = fmt(stats.suggestedHidden || 0);
+    els.statManual.textContent = fmt(kills.length);
 
     renderKills(kills);
   }

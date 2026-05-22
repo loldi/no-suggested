@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.1.0";
+  const VERSION = "1.1.1";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -39,8 +39,10 @@
   let enabled = true;
   let kills = [];
   let pageHidden = 0;
+  let lifetimeUrns = new Set();
   let pendingStatsFlush = null;
-  let pendingStatsDelta = 0;
+  let pendingNewUrns = [];
+  const URN_CAP = 50000;
 
   function isDebug() {
     try { return localStorage.getItem(DEBUG_KEY) === "1"; } catch { return false; }
@@ -111,19 +113,23 @@
     return true;
   }
 
-  function scheduleStatsFlush(delta) {
-    pendingStatsDelta += delta;
+  function scheduleStatsFlush() {
     if (pendingStatsFlush) return;
     pendingStatsFlush = setTimeout(async () => {
-      const inc = pendingStatsDelta;
-      pendingStatsDelta = 0;
       pendingStatsFlush = null;
-      if (inc <= 0) return;
+      if (!pendingNewUrns.length) return;
+      pendingNewUrns = [];
       try {
-        const result = await chrome.storage.local.get(KEYS.stats);
-        const stats = result[KEYS.stats] || { suggestedHidden: 0 };
-        stats.suggestedHidden = (stats.suggestedHidden || 0) + inc;
-        await chrome.storage.local.set({ [KEYS.stats]: stats });
+        if (lifetimeUrns.size > URN_CAP) {
+          const arr = Array.from(lifetimeUrns);
+          lifetimeUrns = new Set(arr.slice(arr.length - URN_CAP));
+        }
+        await chrome.storage.local.set({
+          [KEYS.stats]: {
+            suggestedHidden: lifetimeUrns.size,
+            seenUrns: Array.from(lifetimeUrns),
+          },
+        });
       } catch (e) {
         debug("stats flush failed:", e);
       }
@@ -144,18 +150,26 @@
     const items = root.matches?.(LIST_ITEM_SELECTOR)
       ? [root, ...root.querySelectorAll(LIST_ITEM_SELECTOR)]
       : root.querySelectorAll(LIST_ITEM_SELECTOR);
-    let suggestedHidden = 0;
+    let newlyCounted = 0;
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (seen.has(item)) continue;
       seen.add(item);
       const suggested = isSuggested(item);
       if (suggested || matchesKill(item)) {
-        if (setHidden(item, true) && suggested) suggestedHidden++;
+        const wasHidden = setHidden(item, true);
+        if (wasHidden && suggested) {
+          const urn = urnOf(item);
+          if (urn && !lifetimeUrns.has(urn)) {
+            lifetimeUrns.add(urn);
+            pendingNewUrns.push(urn);
+            newlyCounted++;
+          }
+        }
       }
     }
-    if (suggestedHidden) scheduleStatsFlush(suggestedHidden);
-    return suggestedHidden;
+    if (newlyCounted) scheduleStatsFlush();
+    return newlyCounted;
   }
 
   function runPending() {
@@ -224,13 +238,18 @@
 
   async function loadState() {
     try {
-      const result = await chrome.storage.local.get([KEYS.enabled, KEYS.kills]);
+      const result = await chrome.storage.local.get([KEYS.enabled, KEYS.kills, KEYS.stats]);
       enabled = result[KEYS.enabled] !== false;
       kills = Array.isArray(result[KEYS.kills]) ? result[KEYS.kills] : [];
-      debug("loaded state: enabled=", enabled, "kills=", kills.length);
+      const stats = result[KEYS.stats];
+      if (stats && Array.isArray(stats.seenUrns)) {
+        lifetimeUrns = new Set(stats.seenUrns);
+      }
+      debug("loaded state: enabled=", enabled, "kills=", kills.length, "lifetime=", lifetimeUrns.size);
     } catch {
       enabled = true;
       kills = [];
+      lifetimeUrns = new Set();
     }
   }
 
@@ -279,6 +298,13 @@
       kills = Array.isArray(changes[KEYS.kills].newValue) ? changes[KEYS.kills].newValue : [];
       debug("kills changed:", kills.length);
       reapplyAll();
+    }
+  });
+
+  chrome.runtime?.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type === "no-suggested:get-page-count") {
+      sendResponse({ count: pageHidden, enabled });
+      return true;
     }
   });
 
