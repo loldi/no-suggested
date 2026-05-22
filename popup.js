@@ -12,6 +12,7 @@
     enabled: "no-suggested-enabled",
     kills: "no-suggested-kills",
     stats: "no-suggested-stats",
+    showBadge: "no-suggested-show-badge",
   };
 
   const els = {
@@ -23,17 +24,21 @@
     pickBtn: document.getElementById("pick-btn"),
     killList: document.getElementById("kill-list"),
     clearAll: document.getElementById("clear-all-btn"),
+    badgeToggle: document.getElementById("badge-toggle"),
     versionTag: document.getElementById("version-tag"),
   };
 
   const LINKEDIN_MATCH = /^https:\/\/www\.linkedin\.com\//;
 
   async function getState() {
-    const result = await chrome.storage.local.get([KEYS.enabled, KEYS.kills, KEYS.stats]);
+    const result = await chrome.storage.local.get([
+      KEYS.enabled, KEYS.kills, KEYS.stats, KEYS.showBadge,
+    ]);
     return {
       enabled: result[KEYS.enabled] !== false,
       kills: Array.isArray(result[KEYS.kills]) ? result[KEYS.kills] : [],
       stats: result[KEYS.stats] || { suggestedHidden: 0 },
+      showBadge: result[KEYS.showBadge] !== false,
     };
   }
 
@@ -109,11 +114,12 @@
 
   async function refresh() {
     const [state, pageCount] = await Promise.all([getState(), getPageCount()]);
-    const { enabled, kills, stats } = state;
+    const { enabled, kills, stats, showBadge } = state;
 
     els.toggle.checked = enabled;
     els.banner.hidden = enabled;
     els.pickBtn.disabled = !enabled;
+    els.badgeToggle.checked = showBadge;
 
     els.statPage.textContent = pageCount === null ? "—" : fmt(pageCount);
     els.statLifetime.textContent = fmt(stats.suggestedHidden || 0);
@@ -144,6 +150,10 @@
 
   els.toggle.addEventListener("change", async () => {
     await chrome.storage.local.set({ [KEYS.enabled]: els.toggle.checked });
+  });
+
+  els.badgeToggle.addEventListener("change", async () => {
+    await chrome.storage.local.set({ [KEYS.showBadge]: els.badgeToggle.checked });
   });
 
   els.pickBtn.addEventListener("click", async () => {

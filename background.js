@@ -1,16 +1,39 @@
 /**
  * Background service worker.
  *
- *  - Updates the toolbar badge with the number of hidden posts on each tab.
+ *  - Updates the toolbar badge with the number of hidden posts on each tab,
+ *    respecting the user's "show count on toolbar icon" preference.
  *  - Relays the keyboard shortcut (Alt+Shift+H) into the active LinkedIn tab.
  *
  * Toolbar icon clicks open the popup directly (configured via the action's
- * default_popup in the manifest), so we no longer dispatch a picker toggle
- * from a chrome.action.onClicked listener.
+ * default_popup in the manifest).
  */
 const TARGET_MATCH = /^https:\/\/www\.linkedin\.com\//;
 const BADGE_ON = "#ef4444";
 const BADGE_OFF = "#6b7280";
+const SHOW_BADGE_KEY = "no-suggested-show-badge";
+
+let showBadge = true;
+
+chrome.storage.local.get(SHOW_BADGE_KEY).then((r) => {
+  showBadge = r[SHOW_BADGE_KEY] !== false;
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local" || !changes[SHOW_BADGE_KEY]) return;
+  showBadge = changes[SHOW_BADGE_KEY].newValue !== false;
+  refreshAllLinkedInTabs();
+});
+
+function refreshAllLinkedInTabs() {
+  chrome.tabs.query({ url: "https://www.linkedin.com/*" }, (tabs) => {
+    for (const tab of tabs) {
+      chrome.tabs
+        .sendMessage(tab.id, { type: "no-suggested:refresh-badge" })
+        .catch(() => {});
+    }
+  });
+}
 
 async function setBadgeForTab(tabId, count, enabled) {
   try {
@@ -18,7 +41,11 @@ async function setBadgeForTab(tabId, count, enabled) {
       tabId,
       color: enabled ? BADGE_ON : BADGE_OFF,
     });
-    const text = !enabled ? "off" : count > 0 ? formatBadge(count) : "";
+    let text = "";
+    if (showBadge) {
+      if (!enabled) text = "off";
+      else if (count > 0) text = formatBadge(count);
+    }
     await chrome.action.setBadgeText({ tabId, text });
   } catch {
     // tab may have closed; ignore.
