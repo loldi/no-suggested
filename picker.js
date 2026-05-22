@@ -98,7 +98,7 @@
         : fp.activityUrn
         ? "this post"
         : "this card";
-      toast(`<strong>Nuked.</strong> Hiding ${label} on future loads.`);
+      toast(`<strong>Blocked.</strong> Hiding ${label} on future loads.`);
     });
   }
 
@@ -118,7 +118,7 @@
     if (active) return;
     active = true;
     document.documentElement.classList.add(ACTIVE_CLASS);
-    toast("<strong>Picker on.</strong> Click a post to nuke it. ESC to cancel.", 3000);
+    toast("<strong>Manual block on.</strong> Click a post to hide it. ESC to cancel.", 3000);
   }
 
   function deactivate() {
@@ -126,7 +126,7 @@
     active = false;
     document.documentElement.classList.remove(ACTIVE_CLASS);
     setHighlight(null);
-    toast("Picker off.", 1200);
+    toast("Manual block off.", 1200);
   }
 
   function toggle() {

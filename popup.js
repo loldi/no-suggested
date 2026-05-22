@@ -22,6 +22,7 @@
     statLifetime: document.getElementById("stat-lifetime"),
     statManual: document.getElementById("stat-manual"),
     pickBtn: document.getElementById("pick-btn"),
+    pickHint: document.getElementById("pick-hint"),
     killList: document.getElementById("kill-list"),
     clearAll: document.getElementById("clear-all-btn"),
     badgeToggle: document.getElementById("badge-toggle"),
@@ -48,7 +49,7 @@
 
   function labelForKill(k) {
     if (k.author) {
-      const handle = k.author.replace(/^in\//, "@").replace(/^company\//, "🏢 ");
+      const handle = k.author.replace(/^in\//, "@").replace(/^company\//, "");
       return { kind: k.author.startsWith("company/") ? "company" : "author", label: handle };
     }
     if (k.activityUrn) {
@@ -64,7 +65,7 @@
     if (!kills.length) {
       const li = document.createElement("li");
       li.className = "empty";
-      li.textContent = "No manual kills yet. Use the picker above.";
+      li.textContent = "No manual blocks yet.";
       els.killList.appendChild(li);
       els.clearAll.hidden = true;
       return;
@@ -78,7 +79,7 @@
       const li = document.createElement("li");
 
       const span = document.createElement("span");
-      span.className = "kill-label";
+      span.className = "block-label";
       const kindEl = document.createElement("span");
       kindEl.className = "kind";
       kindEl.textContent = kind;
@@ -90,7 +91,7 @@
       btn.className = "undo-btn";
       btn.type = "button";
       btn.title = "Restore this post";
-      btn.textContent = "×";
+      btn.textContent = "Undo";
       btn.addEventListener("click", () => undoKill(k));
 
       li.appendChild(span);
@@ -117,9 +118,13 @@
     const { enabled, kills, stats, showBadge } = state;
 
     els.toggle.checked = enabled;
+    document.body.classList.toggle("is-off", !enabled);
     els.banner.hidden = enabled;
     els.pickBtn.disabled = !enabled;
     els.badgeToggle.checked = showBadge;
+    els.pickHint.textContent = enabled
+      ? "Click a feed card on the page to hide it permanently"
+      : "Turn filtering on to use manual block";
 
     els.statPage.textContent = pageCount === null ? "—" : fmt(pageCount);
     els.statLifetime.textContent = fmt(stats.suggestedHidden || 0);
@@ -144,7 +149,7 @@
   }
 
   async function clearAllKills() {
-    if (!confirm("Restore all manually-nuked posts? Auto-hidden Suggested posts stay hidden.")) return;
+    if (!confirm("Restore all manually blocked posts? Auto-hidden Suggested posts stay hidden.")) return;
     await chrome.storage.local.set({ [KEYS.kills]: [] });
   }
 

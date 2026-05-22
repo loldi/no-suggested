@@ -97,10 +97,10 @@ Ordered roughly by what's most likely to ship next.
 
 Click the toolbar icon to open it:
 
-- **On/off toggle** in the header — turns hiding off entirely (page un-hides immediately)
-- **Stats** — `this page` (live count on current tab) / `lifetime` (unique posts blocked ever, deduped by URN) / `nuked` (manually picked)
-- **Pick a post to nuke** button — activates the picker (same as `Alt+Shift+H`)
-- **Recently nuked** list — every manual kill with a one-click `×` to restore that post
+- **On/off toggle** in the header — turns filtering off entirely (page un-hides immediately)
+- **Inline stats** — `this page` / `lifetime` / `manual blocks` as a single line
+- **Explainer + manual block button** — short copy on what auto-hide vs manual block means, then **Block a post manually** (`Alt+Shift+H`)
+- **Manual blocks** list — every manual block with a one-click **Undo**
 - **Show count on toolbar icon** checkbox — controls the badge counter
 
 ## Element picker (the eyedropper)
@@ -137,7 +137,7 @@ Inspired by uBlock Origin's cosmetic filtering perf patterns.
 
 ## Regenerating the icon
 
-The icon is drawn programmatically by `tools/make_icons.py` (Pillow required). Re-run after tweaking the design:
+The icon is **concept C** (dark tile, gray feed lines, red middle line). Drawn by `tools/make_icons.py` (Pillow). Re-run after tweaking:
 
 ```bash
 python tools/make_icons.py

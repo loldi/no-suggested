@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>No Suggested — icon concepts</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #0c0c0c;
+        color: #e4e4e7;
+      }
+      .head { max-width: 1200px; margin: 0 auto 24px; }
+      .head h1 { font-size: 1.1rem; margin: 0 0 6px; }
+      .head p { margin: 0; color: #71717a; font-size: 0.85rem; max-width: 65ch; line-height: 1.45; }
+      .toolbar-demo {
+        max-width: 1200px;
+        margin: 0 auto 28px;
+        padding: 14px 16px;
+        background: #1c1c1e;
+        border: 1px solid #333;
+        border-radius: 12px;
+      }
+      .toolbar-demo span {
+        display: block;
+        font-size: 0.75rem;
+        color: #71717a;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 10px;
+      }
+      .toolbar-strip {
+        display: flex;
+        gap: 8px;
+        padding: 8px 10px;
+        background: #2b2a33;
+        border-radius: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .toolbar-strip img {
+        width: 16px;
+        height: 16px;
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .card {
+        background: #141414;
+        border: 1px solid #27272a;
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .card h2 { font-size: 0.85rem; margin: 0 0 4px; font-weight: 600; }
+      .card p {
+        font-size: 0.72rem;
+        color: #71717a;
+        margin: 0 0 12px;
+        min-height: 2.6em;
+        line-height: 1.4;
+      }
+      .sizes {
+        display: flex;
+        align-items: flex-end;
+        gap: 14px;
+        padding: 12px;
+        background: repeating-conic-gradient(#1a1a1a 0% 25%, #222 0% 50%) 50% / 12px 12px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+      }
+      .size-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+      .size-col img { display: block; }
+      .size-col .px { font-size: 0.6rem; color: #52525b; }
+      .tags { display: flex; flex-wrap: wrap; gap: 4px; }
+      .tag {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 2px 6px;
+        border: 1px solid #333;
+        color: #888;
+        border-radius: 999px;
+      }
+      .tag.pick { border-color: #dc2626; color: #fca5a5; }
+      .note-box {
+        max-width: 1200px;
+        margin: 28px auto 0;
+        padding: 14px 16px;
+        border: 1px solid #333;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        color: #a1a1aa;
+        line-height: 1.5;
+      }
+      .note-box strong { color: #e4e4e7; }
+    </style>
+  </head>
+  <body>
+    <header class="head">
+      <h1>Toolbar icon concepts</h1>
+      <p>
+        Nine directions at real extension sizes (16 / 32 / 128 px). Check the
+        <strong>16px</strong> column first — that's what you squint at in the Firefox toolbar.
+        Regenerate PNGs: <code>python tools/make_icon_concepts.py</code>
+      </p>
+    </header>
+
+    <div class="toolbar-demo">
+      <span>16px toolbar strip</span>
+      <div class="toolbar-strip">
+        <img src="icons/a-current-16.png" alt="A" title="A — Current" />
+        <img src="icons/b-dark-slash-16.png" alt="B" title="B — Dark slash" />
+        <img src="icons/b-rounded-16.png" alt="B′" title="B′ — Rounded" />
+        <img src="icons/c-slashed-feed-16.png" alt="C" title="C — Slashed feed" />
+        <img src="icons/c-dotted-feed-16.png" alt="C′" title="C′ — Dotted feed" />
+        <img src="icons/c-feed-slash-16.png" alt="C″" title="C″ — Feed + slash" />
+        <img src="icons/c-feed-circle-slash-16.png" alt="C‴" title="C‴ — Feed + circle" />
+        <img src="icons/d-monogram-16.png" alt="D" title="D — Monogram" />
+        <img src="icons/e-circle-only-16.png" alt="E" title="E — Circle only" />
+        <img src="icons/f-corner-badge-16.png" alt="F" title="F — Corner badge" />
+        <img src="icons/g-accent-bar-16.png" alt="G" title="G — Accent bar" />
+        <img src="icons/h-blocky-16.png" alt="H" title="H — Blocky" />
+      </div>
+    </div>
+
+    <div class="grid">
+      <article class="card">
+        <h2>A — Current (ships today)</h2>
+        <p>White card + full prohibition. Readable at 48px+, muddy at 16px.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/a-current-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/a-current-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/a-current-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">reference</span><span class="tag">busy@16</span></div>
+      </article>
+
+      <article class="card">
+        <h2>B — Dark tile + slash</h2>
+        <p>No circle — just slash over feed lines. Strong at 16px.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/b-dark-slash-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/b-dark-slash-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/b-dark-slash-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">legible</span><span class="tag">minimal</span></div>
+      </article>
+
+      <article class="card">
+        <h2>B′ — Dark slash (rounded)</h2>
+        <p>B with softer corners. Pairs with rounded popup E1.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/b-rounded-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/b-rounded-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/b-rounded-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag pick">pairs E1</span><span class="tag">legible</span></div>
+      </article>
+
+      <article class="card">
+        <h2>C — Slashed middle line</h2>
+        <p>Semantic: the slop line gets struck. No ⊘ symbol.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/c-slashed-feed-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/c-slashed-feed-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/c-slashed-feed-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">semantic</span><span class="tag">unique</span></div>
+      </article>
+
+      <article class="card">
+        <h2>C″ — Feed tile + slash</h2>
+        <p>C's dark tile and gray lines, plus B's diagonal slash. No red middle line.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/c-feed-slash-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/c-feed-slash-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/c-feed-slash-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag pick">C + slash</span><span class="tag">semantic</span></div>
+      </article>
+
+      <article class="card">
+        <h2>C‴ — Feed tile + circle-slash</h2>
+        <p>Same as C″ but with the full prohibition ring. Busier at 16px.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/c-feed-circle-slash-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/c-feed-circle-slash-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/c-feed-circle-slash-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">C + ⊘</span></div>
+      </article>
+
+      <article class="card">
+        <h2>C′ — Dotted middle line</h2>
+        <p>C with a dashed red center line — "filtered out" without the heavy solid strike.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/c-dotted-feed-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/c-dotted-feed-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/c-dotted-feed-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag pick">C iteration</span><span class="tag">semantic</span></div>
+      </article>
+
+      <article class="card">
+        <h2>D — NS monogram stamp</h2>
+        <p>NS stamp. Boring but instantly legible in a crowded toolbar.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/d-monogram-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/d-monogram-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/d-monogram-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">stamp</span><span class="tag">toolbar-clear</span></div>
+      </article>
+
+      <article class="card">
+        <h2>E — Circle-slash only</h2>
+        <p>Universal no symbol. Could mean anything.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/e-circle-only-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/e-circle-only-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/e-circle-only-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">generic</span></div>
+      </article>
+
+      <article class="card">
+        <h2>F — Outlined card + badge</h2>
+        <p>Dismiss-badge metaphor. Light / outline style.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/f-corner-badge-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/f-corner-badge-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/f-corner-badge-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">light UI</span></div>
+      </article>
+
+      <article class="card">
+        <h2>G — E1 accent bar</h2>
+        <p>Same red left bar as popup E1. Cohesive product.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/g-accent-bar-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/g-accent-bar-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/g-accent-bar-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag pick">pairs E1</span><span class="tag">cohesive</span></div>
+      </article>
+
+      <article class="card">
+        <h2>H — Blocky square tile</h2>
+        <p>Square B for comparison. Harsh next to rounded popup.</p>
+        <div class="sizes">
+          <div class="size-col"><img src="icons/h-blocky-128.png" width="64" height="64" alt="" /><span class="px">128</span></div>
+          <div class="size-col"><img src="icons/h-blocky-32.png" width="32" height="32" alt="" /><span class="px">32</span></div>
+          <div class="size-col"><img src="icons/h-blocky-16.png" width="16" height="16" alt="" /><span class="px">16</span></div>
+        </div>
+        <div class="tags"><span class="tag">blocky ref</span></div>
+      </article>
+    </div>
+
+    <div class="note-box">
+      <strong>Pairing with E1 rounded popup:</strong>
+      B′ (dark slash rounded), G (left accent bar), or C (slashed feed line) share the same zinc + red
+      vocabulary. D (monogram) is the most "extension store" legible at tiny sizes but least descriptive.
+      A (current) is busy at 16px — the inner post detail disappears.
+    </div>
+  </body>
+</html>

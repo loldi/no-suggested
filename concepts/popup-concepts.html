@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>No Suggested — popup concepts</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Literata:opsz,wght@7..72,500;600&family=Source+Sans+3:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        background: #0c0c0c;
+        color: #e8e8e8;
+        line-height: 1.4;
+      }
+      .page-head {
+        max-width: 1400px;
+        margin: 0 auto 28px;
+      }
+      .page-head h1 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 6px;
+      }
+      .page-head p {
+        margin: 0;
+        color: #9a9a9a;
+        font-size: 0.9rem;
+        max-width: 62ch;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 28px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .concept {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .concept-meta h2 {
+        font-size: 0.95rem;
+        margin: 0 0 4px;
+        font-weight: 600;
+      }
+      .concept-meta p {
+        margin: 0;
+        font-size: 0.78rem;
+        color: #888;
+      }
+      .concept-meta .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .tag {
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 2px 7px;
+        border: 1px solid #333;
+        color: #aaa;
+      }
+      .frame {
+        width: 300px;
+        border: 1px solid #333;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+      }
+      .frame-label {
+        font-size: 0.65rem;
+        color: #666;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 6px;
+      }
+
+      /* ─── A: Current (reference) ─── */
+      .v-current {
+        --bg: #111827;
+        --bg-alt: #1f2937;
+        --ink: #f9fafb;
+        --muted: #9ca3af;
+        --border: #374151;
+        --accent: #ef4444;
+        --accent-soft: #4b1d1d;
+        --green: #10b981;
+        width: 300px;
+        padding: 12px 14px 10px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+      }
+      .v-current .row { display: flex; align-items: center; justify-content: space-between; }
+      .v-current .title { display: flex; align-items: center; gap: 8px; }
+      .v-current .logo {
+        width: 22px; height: 22px;
+        background: #333;
+        border-radius: 4px;
+      }
+      .v-current h1 { font-size: 14px; font-weight: 600; margin: 0; }
+      .v-current .toggle-track {
+        display: inline-block; width: 34px; height: 20px;
+        background: var(--green); border-radius: 10px; position: relative;
+      }
+      .v-current .toggle-thumb {
+        position: absolute; top: 2px; right: 2px;
+        width: 16px; height: 16px; background: #fff; border-radius: 50%;
+      }
+      .v-current .stats {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+        background: var(--bg-alt); border-radius: 8px; padding: 10px; margin: 10px 0;
+      }
+      .v-current .stat { text-align: center; }
+      .v-current .stat-num { font-size: 18px; font-weight: 600; display: block; }
+      .v-current .stat-label { font-size: 11px; color: var(--muted); }
+      .v-current .primary {
+        width: 100%; background: var(--accent); color: #fff; border: none;
+        border-radius: 8px; padding: 10px; font-weight: 600; margin-bottom: 12px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+      }
+      .v-current kbd {
+        background: rgba(255,255,255,0.18); border-radius: 4px; padding: 1px 5px;
+        font-size: 10px; font-family: monospace;
+      }
+      .v-current h2 {
+        font-size: 11px; font-weight: 600; color: var(--muted); margin: 0;
+        text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .v-current .kill-list {
+        list-style: none; padding: 0; margin: 6px 0 0;
+        border: 1px solid var(--border); border-radius: 6px; font-size: 12px;
+      }
+      .v-current .kill-list li {
+        padding: 6px 8px; border-bottom: 1px solid var(--border);
+        display: flex; justify-content: space-between;
+      }
+      .v-current .empty { color: var(--muted); font-style: italic; justify-content: center; }
+      .v-current .settings {
+        margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);
+        font-size: 12px; color: var(--muted); display: flex; gap: 8px; align-items: center;
+      }
+      .v-current .footer {
+        margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border);
+        font-size: 10px; color: var(--muted); display: flex; justify-content: space-between;
+      }
+
+      /* ─── B: Brutalist ledger ─── */
+      .v-brutal {
+        width: 300px;
+        background: #fafafa;
+        color: #0a0a0a;
+        font-family: "IBM Plex Mono", ui-monospace, monospace;
+        font-size: 11px;
+        border: 2px solid #0a0a0a;
+      }
+      .v-brutal .top {
+        border-bottom: 2px solid #0a0a0a;
+        padding: 10px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+      }
+      .v-brutal .top strong {
+        font-size: 12px;
+        letter-spacing: -0.02em;
+      }
+      .v-brutal .status-on {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 10px;
+      }
+      .v-brutal .ledger {
+        padding: 10px 12px;
+        border-bottom: 2px solid #0a0a0a;
+      }
+      .v-brutal .ledger-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 3px 0;
+      }
+      .v-brutal .ledger-row span:last-child {
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .v-brutal .ledger-total {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px dashed #0a0a0a;
+        font-weight: 600;
+      }
+      .v-brutal .cmd {
+        display: block;
+        width: 100%;
+        border: none;
+        border-bottom: 2px solid #0a0a0a;
+        background: #0a0a0a;
+        color: #fafafa;
+        padding: 11px 12px;
+        font-family: inherit;
+        font-size: 11px;
+        font-weight: 600;
+        text-align: left;
+        cursor: pointer;
+      }
+      .v-brutal .cmd:hover { background: #222; }
+      .v-brutal .cmd kbd { opacity: 0.65; font-weight: 400; }
+      .v-brutal .block {
+        padding: 10px 12px;
+        border-bottom: 2px solid #0a0a0a;
+      }
+      .v-brutal .block-title {
+        font-size: 9px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 8px;
+        color: #555;
+      }
+      .v-brutal .entry {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 0;
+        border-top: 1px solid #ddd;
+      }
+      .v-brutal .entry:first-of-type { border-top: none; }
+      .v-brutal .entry code { font-size: 10px; }
+      .v-brutal .x {
+        border: 1px solid #0a0a0a;
+        background: #fff;
+        width: 18px; height: 18px;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1;
+        cursor: pointer;
+      }
+      .v-brutal .pref {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-bottom: 2px solid #0a0a0a;
+      }
+      .v-brutal .pref input { accent-color: #0a0a0a; }
+      .v-brutal .foot {
+        padding: 8px 12px;
+        font-size: 9px;
+        color: #666;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ─── C: Paper memo ─── */
+      .v-memo {
+        width: 300px;
+        background: #f4f0e8;
+        color: #1c1917;
+        font-family: "Source Sans 3", Georgia, serif;
+        font-size: 13px;
+        box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+        position: relative;
+      }
+      .v-memo::before {
+        content: "";
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: #1e3a5f;
+      }
+      .v-memo .inner { padding: 14px 16px 12px; }
+      .v-memo .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 14px;
+      }
+      .v-memo h1 {
+        font-family: Literata, Georgia, serif;
+        font-size: 15px;
+        font-weight: 600;
+        margin: 0;
+        color: #1e3a5f;
+      }
+      .v-memo .sub {
+        font-size: 11px;
+        color: #78716c;
+        margin-top: 2px;
+      }
+      .v-memo .switch {
+        font-size: 11px;
+        color: #1e3a5f;
+        border: 1px solid #1e3a5f;
+        background: transparent;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .v-memo hr {
+        border: none;
+        border-top: 1px solid #d6d0c4;
+        margin: 12px 0;
+      }
+      .v-memo .counts {
+        display: flex;
+        gap: 0;
+        justify-content: space-between;
+      }
+      .v-memo .counts div { flex: 1; }
+      .v-memo .counts strong {
+        display: block;
+        font-family: Literata, serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: #1c1917;
+        font-variant-numeric: tabular-nums;
+      }
+      .v-memo .counts span {
+        font-size: 10px;
+        color: #78716c;
+        text-transform: lowercase;
+      }
+      .v-memo .action {
+        width: 100%;
+        margin-top: 14px;
+        padding: 9px 0;
+        background: transparent;
+        border: 1px dashed #a8a29e;
+        color: #44403c;
+        font-family: inherit;
+        font-size: 12px;
+        cursor: pointer;
+      }
+      .v-memo .action:hover {
+        border-style: solid;
+        border-color: #1e3a5f;
+        color: #1e3a5f;
+      }
+      .v-memo .section-label {
+        font-size: 10px;
+        letter-spacing: 0.04em;
+        color: #78716c;
+        margin-bottom: 6px;
+      }
+      .v-memo .item {
+        font-size: 12px;
+        padding: 5px 0;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dotted #d6d0c4;
+      }
+      .v-memo .item:last-child { border-bottom: none; }
+      .v-memo .restore {
+        background: none;
+        border: none;
+        color: #78716c;
+        font-size: 11px;
+        text-decoration: underline;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .v-memo .pref {
+        font-size: 12px;
+        color: #57534e;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      .v-memo .pref input { accent-color: #1e3a5f; }
+      .v-memo .foot {
+        font-size: 10px;
+        color: #a8a29e;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ─── D: Native panel ─── */
+      .v-native {
+        width: 300px;
+        background: #2b2a33;
+        color: #fbfbfe;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        font-size: 13px;
+      }
+      .v-native .bar {
+        padding: 10px 12px 8px;
+        border-bottom: 1px solid #52525e;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .v-native .bar img-placeholder {
+        width: 24px; height: 24px;
+        background: #42414d;
+        border-radius: 4px;
+      }
+      .v-native .bar h1 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        flex: 1;
+      }
+      .v-native .native-toggle {
+        appearance: none;
+        width: 36px; height: 20px;
+        background: #0060df;
+        border-radius: 2px;
+        position: relative;
+        cursor: pointer;
+        border: 1px solid #0a84ff;
+      }
+      .v-native .native-toggle::after {
+        content: "";
+        position: absolute;
+        top: 2px; right: 2px;
+        width: 14px; height: 14px;
+        background: #fff;
+        border-radius: 1px;
+      }
+      .v-native .group {
+        padding: 4px 0;
+        border-bottom: 1px solid #52525e;
+      }
+      .v-native .group-title {
+        padding: 8px 12px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #b1b1b3;
+      }
+      .v-native .stat-line {
+        padding: 6px 12px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 13px;
+      }
+      .v-native .stat-line .n {
+        font-variant-numeric: tabular-nums;
+        color: #cfcfd8;
+      }
+      .v-native .list-row {
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-top: 1px solid #3a3944;
+        font-size: 12px;
+      }
+      .v-native .list-row:first-child { border-top: none; }
+      .v-native .list-row .grow { flex: 1; min-width: 0; }
+      .v-native .list-row .muted { color: #b1b1b3; font-size: 11px; }
+      .v-native .btn-row {
+        padding: 8px 12px 10px;
+      }
+      .v-native .btn-row button {
+        width: 100%;
+        padding: 8px;
+        background: #42414d;
+        border: 1px solid #52525e;
+        color: #fbfbfe;
+        font-size: 13px;
+        border-radius: 2px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .v-native .btn-row button:hover { background: #52525e; }
+      .v-native .btn-row .hint {
+        text-align: center;
+        font-size: 10px;
+        color: #b1b1b3;
+        margin-top: 6px;
+      }
+      .v-native .check-row {
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .v-native .check-row input {
+        width: 16px; height: 16px;
+        accent-color: #0060df;
+      }
+      .v-native .foot {
+        padding: 8px 12px;
+        font-size: 11px;
+        color: #b1b1b3;
+        border-top: 1px solid #52525e;
+        display: flex;
+        justify-content: space-between;
+      }
+
+      /* ─── E: Inline strip (minimal) ─── */
+      .v-strip {
+        width: 300px;
+        background: #18181b;
+        color: #fafafa;
+        font-family: "Source Sans 3", system-ui, sans-serif;
+        font-size: 12px;
+        padding: 0;
+      }
+      .v-strip .hero {
+        padding: 14px 14px 10px;
+        border-left: 3px solid #dc2626;
+      }
+      .v-strip .hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .v-strip .hero h1 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+        letter-spacing: 0.02em;
+      }
+      .v-strip .dot-on {
+        width: 8px; height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+      }
+      .v-strip .inline-stats {
+        color: #a1a1aa;
+        font-size: 11px;
+      }
+      .v-strip .inline-stats b {
+        color: #fafafa;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+      }
+      .v-strip .sep { color: #52525b; margin: 0 4px; }
+      .v-strip .actions {
+        display: flex;
+        border-top: 1px solid #27272a;
+      }
+      .v-strip .actions button {
+        flex: 1;
+        border: none;
+        background: transparent;
+        color: #e4e4e7;
+        padding: 10px 8px;
+        font-size: 11px;
+        font-family: inherit;
+        cursor: pointer;
+        border-right: 1px solid #27272a;
+      }
+      .v-strip .actions button:last-child { border-right: none; }
+      .v-strip .actions button:hover { background: #27272a; }
+      .v-strip .actions button.primary { color: #fca5a5; font-weight: 600; }
+      .v-strip .drawer {
+        padding: 10px 14px 12px;
+        border-top: 1px solid #27272a;
+        background: #141416;
+      }
+      .v-strip .drawer-title {
+        font-size: 10px;
+        color: #71717a;
+        margin-bottom: 6px;
+      }
+      .v-strip .drawer-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+        font-size: 11px;
+        color: #d4d4d8;
+      }
+      .v-strip .drawer-item button {
+        background: none;
+        border: none;
+        color: #71717a;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 0 4px;
+      }
+      .v-strip .pref-line {
+        padding: 8px 14px 10px;
+        font-size: 11px;
+        color: #71717a;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        border-top: 1px solid #27272a;
+      }
+      .v-strip .pref-line input { accent-color: #dc2626; }
+      .v-strip .foot {
+        padding: 6px 14px 8px;
+        font-size: 9px;
+        color: #52525b;
+        display: flex;
+        justify-content: space-between;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page-head">
+      <h1>No Suggested — popup concepts</h1>
+      <p>
+        Five directions at 300×~340px (real extension popup width). Same content, different
+        personality. Deliberately avoiding the usual tells: purple gradients, pill everything,
+        giant red CTAs, glass blur, Inter-at-14px-with-600-weight hero copy.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- A: Current -->
+      <article class="concept">
+        <div class="concept-meta">
+          <h2>A — Current (v1.2)</h2>
+          <p>What ships today. Fine. Also the most "generic dark extension popup" energy.</p>
+          <div class="tags">
+            <span class="tag">reference</span>
+            <span class="tag">system-ui</span>
+            <span class="tag">stat cards</span>
+          </div>
+        </div>
+        <div class="frame-label">300px popup</div>
+        <div class="frame v-current">
+          <header class="row">
+            <div class="title">
+              <div class="logo" aria-hidden="true"></div>
+              <h1>No Suggested</h1>
+            </div>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </header>
+          <section class="stats">
+            <div class="stat"><span class="stat-num">6</span><span class="stat-label">this page</span></div>
+            <div class="stat"><span class="stat-num">18</span><span class="stat-label">lifetime</span></div>
+            <div class="stat"><span class="stat-num">2</span><span class="stat-label">nuked</span></div>
+          </section>
+          <button type="button" class="primary">Pick a post to nuke <kbd>Alt+Shift+H</kbd></button>
+          <div class="row"><h2>Recently nuked</h2></div>
+          <ul class="kill-list">
+            <li><span>@roshan-gupta</span><span>×</span></li>
+            <li><span>Product Growth</span><span>×</span></li>
+          </ul>
+          <div class="settings"><input type="checkbox" checked /> Show count on toolbar icon</div>
+          <footer class="footer"><span>github.com/loldi/no-suggested</span><span>v1.2.0</span></footer>
+        </div>
+      </article>
+
+      <!-- B: Brutalist -->
+      <article class="concept">
+        <div class="concept-meta">
+          <h2>B — Brutalist ledger</h2>
+          <p>Receipt / terminal log. Square corners, mono type, black rules. Stats read like a tally sheet.</p>
+          <div class="tags">
+            <span class="tag">IBM Plex Mono</span>
+            <span class="tag">no radius</span>
+            <span class="tag">high contrast</span>
+          </div>
+        </div>
+        <div class="frame-label">300px popup</div>
+        <div class="frame v-brutal">
+          <div class="top">
+            <strong>NO SUGGESTED</strong>
+            <span class="status-on">ON</span>
+          </div>
+          <div class="ledger">
+            <div class="ledger-row"><span>page</span><span>6</span></div>
+            <div class="ledger-row"><span>lifetime</span><span>18</span></div>
+            <div class="ledger-row"><span>manual</span><span>2</span></div>
+            <div class="ledger-row ledger-total"><span>blocked today</span><span>6</span></div>
+          </div>
+          <button type="button" class="cmd">→ PICK TARGET <kbd>Alt+Shift+H</kbd></button>
+          <div class="block">
+            <div class="block-title">Kill log</div>
+            <div class="entry"><code>@roshan-gupta</code><button type="button" class="x">×</button></div>
+            <div class="entry"><code>Product Growth</code><button type="button" class="x">×</button></div>
+          </div>
+          <label class="pref"><input type="checkbox" /> badge count</label>
+          <div class="foot"><span>loldi/no-suggested</span><span>v1.2.0</span></div>
+        </div>
+      </article>
+
+      <!-- C: Paper memo -->
+      <article class="concept">
+        <div class="concept-meta">
+          <h2>C — Paper memo</h2>
+          <p>Warm stock, serif title, navy accent. Feels like a sticky note on your monitor, not a SaaS dashboard.</p>
+          <div class="tags">
+            <span class="tag">Literata</span>
+            <span class="tag">warm paper</span>
+            <span class="tag">dashed CTA</span>
+          </div>
+        </div>
+        <div class="frame-label">300px popup</div>
+        <div class="frame v-memo">
+          <div class="inner">
+            <div class="head">
+              <div>
+                <h1>No Suggested</h1>
+                <div class="sub">LinkedIn feed filter</div>
+              </div>
+              <button type="button" class="switch">On</button>
+            </div>
+            <div class="counts">
+              <div><strong>6</strong><span>this page</span></div>
+              <div><strong>18</strong><span>lifetime</span></div>
+              <div><strong>2</strong><span>nuked</span></div>
+            </div>
+            <hr />
+            <button type="button" class="action">Pick a post to hide · Alt+Shift+H</button>
+            <hr />
+            <div class="section-label">Recently hidden</div>
+            <div class="item"><span>@roshan-gupta</span><button type="button" class="restore">restore</button></div>
+            <div class="item"><span>Product Growth</span><button type="button" class="restore">restore</button></div>
+            <hr />
+            <label class="pref"><input type="checkbox" /> Show count on toolbar icon</label>
+            <hr />
+            <footer class="foot"><span>github</span><span>v1.2.0</span></footer>
+          </div>
+        </div>
+      </article>
+
+      <!-- D: Native panel -->
+      <article class="concept">
+        <div class="concept-meta">
+          <h2>D — Native panel</h2>
+          <p>Firefox <code>about:preferences</code> energy. Grouped rows, square toggles, secondary button. Disappears into the browser.</p>
+          <div class="tags">
+            <span class="tag">Firefox chrome</span>
+            <span class="tag">list rows</span>
+            <span class="tag">no hero button</span>
+          </div>
+        </div>
+        <div class="frame-label">300px popup</div>
+        <div class="frame v-native">
+          <div class="bar">
+            <div class="img-placeholder"></div>
+            <h1>No Suggested</h1>
+            <div class="native-toggle" role="presentation"></div>
+          </div>
+          <div class="group">
+            <div class="group-title">Statistics</div>
+            <div class="stat-line"><span>Hidden on this page</span><span class="n">6</span></div>
+            <div class="stat-line"><span>Lifetime (unique)</span><span class="n">18</span></div>
+            <div class="stat-line"><span>Manually blocked</span><span class="n">2</span></div>
+          </div>
+          <div class="group">
+            <div class="group-title">Blocked authors</div>
+            <div class="list-row">
+              <div class="grow">@roshan-gupta<div class="muted">author</div></div>
+              <button type="button" style="background:none;border:none;color:#0a84ff;font-size:12px;cursor:pointer">Undo</button>
+            </div>
+            <div class="list-row">
+              <div class="grow">Product Growth<div class="muted">company</div></div>
+              <button type="button" style="background:none;border:none;color:#0a84ff;font-size:12px;cursor:pointer">Undo</button>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button">Pick element on page…</button>
+            <div class="hint">Shortcut: Alt+Shift+H</div>
+          </div>
+          <label class="check-row"><input type="checkbox" checked /> Show count on toolbar icon</label>
+          <footer class="foot"><span>GitHub</span><span>v1.2.0</span></footer>
+        </div>
+      </article>
+
+      <!-- E: Inline strip -->
+      <article class="concept">
+        <div class="concept-meta">
+          <h2>E — Inline strip</h2>
+          <p>Stats as prose, not cards. Segmented actions. Red is a 3px accent bar, not a full-width button. Dense.</p>
+          <div class="tags">
+            <span class="tag">minimal chrome</span>
+            <span class="tag">inline stats</span>
+            <span class="tag">segmented controls</span>
+          </div>
+        </div>
+        <div class="frame-label">300px popup</div>
+        <div class="frame v-strip">
+          <div class="hero">
+            <div class="hero-top">
+              <h1>No Suggested</h1>
+              <span class="dot-on" title="Active"></span>
+            </div>
+            <p class="inline-stats">
+              <b>6</b> this page <span class="sep">·</span>
+              <b>18</b> lifetime <span class="sep">·</span>
+              <b>2</b> nuked
+            </p>
+          </div>
+          <div class="actions">
+            <button type="button" class="primary">Nuke…</button>
+            <button type="button">Off</button>
+            <button type="button">⋯</button>
+          </div>
+          <div class="drawer">
+            <div class="drawer-title">Recent</div>
+            <div class="drawer-item"><span>@roshan-gupta</span><button type="button">×</button></div>
+            <div class="drawer-item"><span>Product Growth</span><button type="button">×</button></div>
+          </div>
+          <label class="pref-line"><input type="checkbox" /> Badge count</label>
+          <footer class="foot"><span>loldi/no-suggested</span><span>v1.2.0</span></footer>
+        </div>
+      </article>
+    </div>
+  </body>
+</html>
