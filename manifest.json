@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "No Suggested",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "description": "Hides LinkedIn \"Suggested\" posts. Click the icon or press Alt+Shift+H to nuke any post that slips through.",
   "icons": {
     "48": "icons/icon48.png",

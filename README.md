@@ -8,20 +8,20 @@ Includes a uBlock-style **element picker** for the occasional post that slips th
 
 ## Install (unpacked)
 
-### Chrome / Edge / Brave
-
-1. Open `chrome://extensions`
-2. Enable **Developer mode**
-3. Click **Load unpacked**
-4. Select this folder (`no-suggested`)
-
 ### Firefox
 
 1. Open `about:debugging#/runtime/this-firefox`
 2. Click **Load Temporary Add-on…**
 3. Choose `manifest.json` in this folder
 
-> Temporary add-ons disappear when Firefox restarts. For a permanent install, use [Firefox Add-on signing](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) or keep loading unpacked via `about:debugging`.
+> Temporary add-ons disappear when Firefox restarts. For a permanent install, use [Firefox Add-on signing](https://extensionworkshop.com/documentation/publish/signing-and-distribution-overview/) or keep loading unpacked via `about:debugging`. Your kill list in `storage.local` persists across reloads either way.
+
+### Chrome / Edge / Brave
+
+1. Open `chrome://extensions`
+2. Enable **Developer mode**
+3. Click **Load unpacked**
+4. Select this folder (`no-suggested`)
 
 ## Element picker (the eyedropper)
 

@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.2.0";
+  const VERSION = "1.0.0";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
