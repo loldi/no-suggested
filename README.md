@@ -1,10 +1,8 @@
 <div align="center">
-
 <img src="icons/icon128.png" alt="No Suggested icon" width="128" height="128">
 
 # No Suggested
 
----
 
 <p><em>Suggested posts hide themselves. You handle the rest.</em></p>
 
