@@ -1,16 +1,32 @@
+<div align="center">
+
+<img src="icons/icon128.png" alt="No Suggested icon" width="128" height="128">
+
 # No Suggested
 
+---
+
+<p><em>Suggested posts hide themselves. You handle the rest.</em></p>
+
 [![Release](https://img.shields.io/github/v/release/loldi/no-suggested?label=release&color=ef4444)](https://github.com/loldi/no-suggested/releases/latest)
+[![Stars](https://img.shields.io/github/stars/loldi/no-suggested?label=stars&color=fbbf24)](https://github.com/loldi/no-suggested/stargazers)
+[![Downloads](https://img.shields.io/github/downloads/loldi/no-suggested/total?label=downloads&color=8b5cf6)](https://github.com/loldi/no-suggested/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Dependencies](https://img.shields.io/badge/dependencies-zero-22c55e)](#)
-[![Downloads](https://img.shields.io/github/downloads/loldi/no-suggested/total?color=8b5cf6)](https://github.com/loldi/no-suggested/releases)
+
+[Install](#install) · [Popup](#the-popup) · [Features](#feature-matrix) · [Manual block](#manual-block-picker) · [How it works](#how-it-works)
+
+<img src="docs/popup-screenshot.png" alt="No Suggested popup menu" width="300">
+
+---
+
+</div>
 
 A tiny browser extension that hides LinkedIn **Suggested** posts from your feed. No accounts, no telemetry, no dependencies.
 
 **What you get**
 
 - Auto-hides every feed card labeled **Suggested**
-- **Manual block** picker (`Alt+Shift+H`) for anything else that slips through — blocked by author when possible, so future posts from that account disappear too
+- **Manual block** picker (`Alt+Shift+H`) for anything else that slips through. Blocked by author when possible, so future posts from that account disappear too.
 - Toolbar **popup**: on/off switch, live stats, manual block list with one-click undo
 - Optional **badge counter** on the toolbar icon (toggle in the popup)
 
