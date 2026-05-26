@@ -3,3 +3,13 @@ Thumbs.db
 *.zip
 *.xpi
 no-suggested-v*.zip
+
+# Design exploration + asset generators (local dev only, not extension distro)
+concepts/
+tools/
+
+# Python (when running tools/ locally)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
