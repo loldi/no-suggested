@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "No Suggested",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "Hides LinkedIn \"Suggested\" posts. Includes a uBlock-style picker for the slop that slips through.",
   "icons": {
     "16": "icons/icon16.png",
@@ -32,6 +32,12 @@
       "description": "Toggle the No Suggested element picker"
     }
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["page-diag.js"],
+      "matches": ["https://www.linkedin.com/*"]
+    }
+  ],
   "content_scripts": [
     {
       "matches": ["https://www.linkedin.com/*"],

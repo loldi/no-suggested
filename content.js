@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.2.2";
+  const VERSION = "1.2.3";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -366,43 +366,54 @@
     debug("started v" + VERSION);
   }
 
-  function installDiagHook() {
-    window.addEventListener("no-suggested-diag", () => {
-      const items = collectFeedCards(document.body);
-      let suggested = 0;
-      let killed = 0;
-      items.forEach((it) => {
-        if (isSuggested(it)) suggested++;
-        else if (matchesKill(it)) killed++;
-      });
-      const suggestedItems = items.filter((it) => isSuggested(it));
-      const withUrn = suggestedItems.filter((it) => !!urnOf(it)).length;
-      console.log(LOG, "DIAG", {
-        version: VERSION,
-        url: location.href,
-        enabled,
-        feedCards: items.length,
-        dataViewSuggested: document.querySelectorAll(SUGGESTED_VIEW_SELECTOR).length,
-        suggestedHits: suggested,
-        suggestedWithUrn: withUrn,
-        suggestedWithoutUrn: suggestedItems.length - withUrn,
-        killMatches: killed,
-        storedKills: kills.length,
-        hidden: document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`).length,
-        pageHidden,
-        lifetimeSize: lifetimeUrns.size,
-        pendingFlushScheduled: !!pendingStatsFlush,
-        pendingNewKeys: pendingNewUrns.length,
-        observerScope: observerScope?.tagName || null,
-        scanCount,
-        avgScanMs: scanCount ? +(totalScanMs / scanCount).toFixed(2) : 0,
-        maxScanMs: +maxScanMs.toFixed(2),
-      });
+  function runDiagReport() {
+    const items = collectFeedCards(document.body);
+    let suggested = 0;
+    let killed = 0;
+    items.forEach((it) => {
+      if (isSuggested(it)) suggested++;
+      else if (matchesKill(it)) killed++;
     });
-    const helper = document.createElement("script");
-    helper.textContent = "window.noSuggestedDiag=function(){window.dispatchEvent(new Event('no-suggested-diag'));};";
-    (document.documentElement || document.head).appendChild(helper);
-    helper.remove();
+    const suggestedItems = items.filter((it) => isSuggested(it));
+    const withUrn = suggestedItems.filter((it) => !!urnOf(it)).length;
+    const report = {
+      version: VERSION,
+      url: location.href,
+      enabled,
+      feedCards: items.length,
+      dataViewSuggested: document.querySelectorAll(SUGGESTED_VIEW_SELECTOR).length,
+      suggestedHits: suggested,
+      suggestedWithUrn: withUrn,
+      suggestedWithoutUrn: suggestedItems.length - withUrn,
+      killMatches: killed,
+      storedKills: kills.length,
+      hidden: document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`).length,
+      pageHidden,
+      lifetimeSize: lifetimeUrns.size,
+      pendingFlushScheduled: !!pendingStatsFlush,
+      pendingNewKeys: pendingNewUrns.length,
+      observerScope: observerScope?.tagName || null,
+      scanCount,
+      avgScanMs: scanCount ? +(totalScanMs / scanCount).toFixed(2) : 0,
+      maxScanMs: +maxScanMs.toFixed(2),
+      pageDiagBridge: !!document.getElementById("no-suggested-diag-bridge"),
+    };
+    console.log(LOG, "DIAG", report);
+    return report;
+  }
+
+  function installDiagHook() {
+    document.addEventListener("no-suggested-diag", runDiagReport, false);
+
+    const id = "no-suggested-diag-bridge";
+    if (document.getElementById(id)) return;
+    const bridge = document.createElement("script");
+    bridge.id = id;
+    bridge.src = chrome.runtime.getURL("page-diag.js");
+    bridge.addEventListener("error", () => {
+      debug("page-diag.js failed to load (CSP); use document.dispatchEvent fallback");
+    });
+    (document.head || document.documentElement).appendChild(bridge);
   }
 
   chrome.storage?.onChanged.addListener((changes, area) => {
@@ -427,9 +438,17 @@
     if (msg?.type === "no-suggested:refresh-badge") {
       notifyBadge();
     }
+    if (msg?.type === "no-suggested:diag") {
+      sendResponse(runDiagReport());
+      return true;
+    }
   });
 
-  console.log(LOG, "active v" + VERSION);
+  console.log(
+    LOG,
+    "active v" + VERSION,
+    "— diag: noSuggestedDiag() or document.dispatchEvent(new Event('no-suggested-diag'))"
+  );
   installDiagHook();
 
   loadState().then(() => {
