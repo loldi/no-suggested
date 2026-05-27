@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.2.1";
+  const VERSION = "1.2.2";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -31,6 +31,10 @@
   ]);
 
   const LIST_ITEM_SELECTOR = '[role="listitem"]';
+  const SUGGESTED_VIEW_SELECTOR = '[data-view-name="feed-suggested-update"]';
+  const LABEL_SELECTOR =
+    "span, h2, h3, h4, div, p, strong, label, [aria-label]";
+  const MAX_LABEL_LEN = 80;
 
   let seen = new WeakSet();
   const pending = new Set();
@@ -62,17 +66,67 @@
     if (isDebug()) console.log(LOG, ...args);
   }
 
+  function normalizeLabel(text) {
+    return (text || "").replace(/\s+/g, " ").trim();
+  }
+
+  function isSuggestedLabel(text) {
+    const t = normalizeLabel(text);
+    if (!t || t.length > MAX_LABEL_LEN) return false;
+    if (SUGGESTED_TEXT.has(t)) return true;
+    return /^Suggested\b/i.test(t);
+  }
+
+  function labelText(el) {
+    const aria = el.getAttribute?.("aria-label");
+    if (aria) return normalizeLabel(aria);
+    return normalizeLabel(el.textContent);
+  }
+
+  /** LinkedIn marks suggested feed cards with data-view-name; label text
+   *  may sit in nested spans (no longer leaf-only). */
   function isSuggested(item) {
+    if (item.matches?.(SUGGESTED_VIEW_SELECTOR)) return true;
+    if (item.querySelector(SUGGESTED_VIEW_SELECTOR)) return true;
+
     const text = item.textContent;
     if (!text || !text.includes("Suggested")) return false;
-    const spans = item.querySelectorAll("span, h2, h3");
-    for (let i = 0; i < spans.length; i++) {
-      const span = spans[i];
-      if (span.children.length !== 0) continue;
-      const t = span.textContent.trim();
-      if (SUGGESTED_TEXT.has(t)) return true;
+
+    const labels = item.querySelectorAll(LABEL_SELECTOR);
+    for (let i = 0; i < labels.length; i++) {
+      if (isSuggestedLabel(labelText(labels[i]))) return true;
     }
     return false;
+  }
+
+  /** One hide target per feed card (prefer listitem wrapper). */
+  function feedCardRoot(node) {
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) return null;
+    const listItem = node.closest?.(LIST_ITEM_SELECTOR);
+    if (listItem) return listItem;
+    const suggested = node.closest?.(SUGGESTED_VIEW_SELECTOR);
+    if (suggested) return suggested;
+    if (node.matches?.(LIST_ITEM_SELECTOR)) return node;
+    if (node.matches?.(SUGGESTED_VIEW_SELECTOR)) return node;
+    return null;
+  }
+
+  function collectFeedCards(root) {
+    if (!root || root.nodeType !== Node.ELEMENT_NODE) return [];
+    const raw = new Set();
+    if (root.matches?.(LIST_ITEM_SELECTOR) || root.matches?.(SUGGESTED_VIEW_SELECTOR)) {
+      const card = feedCardRoot(root);
+      if (card) raw.add(card);
+    }
+    root.querySelectorAll(LIST_ITEM_SELECTOR).forEach((el) => {
+      const card = feedCardRoot(el);
+      if (card) raw.add(card);
+    });
+    root.querySelectorAll(SUGGESTED_VIEW_SELECTOR).forEach((el) => {
+      const card = feedCardRoot(el);
+      if (card) raw.add(card);
+    });
+    return [...raw];
   }
 
   function authorOf(item) {
@@ -167,9 +221,7 @@
   function scan(root) {
     if (!enabled) return 0;
     if (!root || root.nodeType !== Node.ELEMENT_NODE) return 0;
-    const items = root.matches?.(LIST_ITEM_SELECTOR)
-      ? [root, ...root.querySelectorAll(LIST_ITEM_SELECTOR)]
-      : root.querySelectorAll(LIST_ITEM_SELECTOR);
+    const items = collectFeedCards(root);
     let newlyCounted = 0;
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -316,20 +368,21 @@
 
   function installDiagHook() {
     window.addEventListener("no-suggested-diag", () => {
-      const items = document.querySelectorAll(LIST_ITEM_SELECTOR);
+      const items = collectFeedCards(document.body);
       let suggested = 0;
       let killed = 0;
       items.forEach((it) => {
         if (isSuggested(it)) suggested++;
         else if (matchesKill(it)) killed++;
       });
-      const suggestedItems = [...items].filter((it) => isSuggested(it));
+      const suggestedItems = items.filter((it) => isSuggested(it));
       const withUrn = suggestedItems.filter((it) => !!urnOf(it)).length;
       console.log(LOG, "DIAG", {
         version: VERSION,
         url: location.href,
         enabled,
-        listItems: items.length,
+        feedCards: items.length,
+        dataViewSuggested: document.querySelectorAll(SUGGESTED_VIEW_SELECTOR).length,
         suggestedHits: suggested,
         suggestedWithUrn: withUrn,
         suggestedWithoutUrn: suggestedItems.length - withUrn,
