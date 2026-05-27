@@ -21,10 +21,34 @@
   let currentTarget = null;
   let toastTimer = null;
 
+  const SUGGESTED_VIEW_SELECTOR = '[data-view-name="feed-suggested-update"]';
+  const CARD_PROBE_SELECTORS = [
+    LIST_ITEM_SELECTOR,
+    SUGGESTED_VIEW_SELECTOR,
+    '[role="article"]',
+    ".feed-shared-update-v2",
+  ];
+  const URN_RE = /urn:li:(activity|ugcPost|share)/;
+
+  function* walkDeep(node) {
+    if (!node || node.nodeType !== Node.ELEMENT_NODE) return;
+    yield node;
+    if (node.shadowRoot) yield* walkDeep(node.shadowRoot);
+    for (let i = 0; i < node.children.length; i++) yield* walkDeep(node.children[i]);
+  }
+
   function findFeedItem(el) {
-    while (el && el !== document.body) {
-      if (el.matches?.(LIST_ITEM_SELECTOR)) return el;
-      el = el.parentElement;
+    let node = el;
+    for (let depth = 0; depth < 32 && node && node !== document.body; depth++) {
+      if (node.nodeType !== Node.ELEMENT_NODE) break;
+      for (let i = 0; i < CARD_PROBE_SELECTORS.length; i++) {
+        if (node.matches?.(CARD_PROBE_SELECTORS[i])) return node;
+      }
+      const urn = node.getAttribute?.("data-urn");
+      if (urn && URN_RE.test(urn)) return node;
+      if (node.parentElement) node = node.parentElement;
+      else if (node.parentNode instanceof ShadowRoot) node = node.parentNode.host;
+      else node = null;
     }
     return null;
   }
@@ -33,13 +57,19 @@
   function fingerprint(item) {
     const fp = {};
 
-    const urnNode = item.querySelector("[data-urn]");
+    let urnNode = null;
+    for (const n of walkDeep(item)) {
+      if (n.hasAttribute?.("data-urn")) { urnNode = n; break; }
+    }
     const urn = urnNode?.getAttribute("data-urn") || item.getAttribute("data-urn");
     if (urn && /urn:li:(activity|ugcPost|share)/.test(urn)) {
       fp.activityUrn = urn;
     }
 
-    const profileAnchor = item.querySelector('a[href*="/in/"], a[href*="/company/"]');
+    let profileAnchor = null;
+    for (const n of walkDeep(item)) {
+      if (n.matches?.('a[href*="/in/"], a[href*="/company/"]')) { profileAnchor = n; break; }
+    }
     if (profileAnchor) {
       const href = profileAnchor.getAttribute("href") || "";
       const match = href.match(/\/(in|company)\/([^/?#]+)/);
@@ -93,6 +123,7 @@
     }
     saveKill(fp).then(() => {
       item.setAttribute("data-no-suggested-hidden", "1");
+      item.style.setProperty("display", "none", "important");
       const label = fp.author
         ? "by " + fp.author.replace(/^in\//, "@").replace(/^company\//, "")
         : fp.activityUrn

@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.2.3";
+  const VERSION = "1.2.4";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -35,6 +35,15 @@
   const LABEL_SELECTOR =
     "span, h2, h3, h4, div, p, strong, label, [aria-label]";
   const MAX_LABEL_LEN = 80;
+  const CARD_PROBE_SELECTORS = [
+    LIST_ITEM_SELECTOR,
+    SUGGESTED_VIEW_SELECTOR,
+    '[role="article"]',
+    ".feed-shared-update-v2",
+    '[data-urn*="urn:li:activity"]',
+    '[data-urn*="urn:li:ugcPost"]',
+  ];
+  const URN_RE = /urn:li:(activity|ugcPost|share)/;
 
   let seen = new WeakSet();
   const pending = new Set();
@@ -66,6 +75,45 @@
     if (isDebug()) console.log(LOG, ...args);
   }
 
+  /** Walk light DOM + open shadow roots (LinkedIn feed often lives in shadow). */
+  function* walkDeep(node) {
+    if (!node) return;
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      yield node;
+      if (node.shadowRoot) yield* walkDeep(node.shadowRoot);
+      for (let i = 0; i < node.children.length; i++) {
+        yield* walkDeep(node.children[i]);
+      }
+    }
+  }
+
+  function deepQueryAll(root, selector) {
+    const out = [];
+    for (const el of walkDeep(root)) {
+      if (el.matches?.(selector)) out.push(el);
+    }
+    return out;
+  }
+
+  function deepClosest(node, selector) {
+    let el = node;
+    while (el) {
+      if (el.nodeType === Node.ELEMENT_NODE && el.matches?.(selector)) return el;
+      if (el.parentElement) el = el.parentElement;
+      else if (el.parentNode instanceof ShadowRoot) el = el.parentNode.host;
+      else el = null;
+    }
+    return null;
+  }
+
+  function countShadowRoots(root) {
+    let n = 0;
+    for (const el of walkDeep(root)) {
+      if (el.shadowRoot) n++;
+    }
+    return n;
+  }
+
   function normalizeLabel(text) {
     return (text || "").replace(/\s+/g, " ").trim();
   }
@@ -87,57 +135,86 @@
    *  may sit in nested spans (no longer leaf-only). */
   function isSuggested(item) {
     if (item.matches?.(SUGGESTED_VIEW_SELECTOR)) return true;
-    if (item.querySelector(SUGGESTED_VIEW_SELECTOR)) return true;
+    if (deepQueryAll(item, SUGGESTED_VIEW_SELECTOR).length) return true;
 
     const text = item.textContent;
     if (!text || !text.includes("Suggested")) return false;
 
-    const labels = item.querySelectorAll(LABEL_SELECTOR);
+    const labels = deepQueryAll(item, LABEL_SELECTOR);
     for (let i = 0; i < labels.length; i++) {
       if (isSuggestedLabel(labelText(labels[i]))) return true;
     }
     return false;
   }
 
-  /** One hide target per feed card (prefer listitem wrapper). */
+  /** Walk up through shadow boundaries to the feed post wrapper. */
+  function findPostAncestor(from) {
+    let el = from;
+    for (let depth = 0; depth < 32 && el; depth++) {
+      if (el.nodeType !== Node.ELEMENT_NODE) break;
+      for (let i = 0; i < CARD_PROBE_SELECTORS.length; i++) {
+        const sel = CARD_PROBE_SELECTORS[i];
+        if (el.matches?.(sel)) return el;
+      }
+      const urn = el.getAttribute?.("data-urn");
+      if (urn && URN_RE.test(urn)) return el;
+      if (el.parentElement) el = el.parentElement;
+      else if (el.parentNode instanceof ShadowRoot) el = el.parentNode.host;
+      else el = null;
+    }
+    return null;
+  }
+
   function feedCardRoot(node) {
     if (!node || node.nodeType !== Node.ELEMENT_NODE) return null;
-    const listItem = node.closest?.(LIST_ITEM_SELECTOR);
-    if (listItem) return listItem;
-    const suggested = node.closest?.(SUGGESTED_VIEW_SELECTOR);
-    if (suggested) return suggested;
-    if (node.matches?.(LIST_ITEM_SELECTOR)) return node;
-    if (node.matches?.(SUGGESTED_VIEW_SELECTOR)) return node;
-    return null;
+    return (
+      deepClosest(node, LIST_ITEM_SELECTOR) ||
+      deepClosest(node, SUGGESTED_VIEW_SELECTOR) ||
+      (node.matches?.(LIST_ITEM_SELECTOR) ? node : null) ||
+      (node.matches?.(SUGGESTED_VIEW_SELECTOR) ? node : null)
+    );
+  }
+
+  function resolveFeedCard(el) {
+    return feedCardRoot(el) || findPostAncestor(el) || null;
   }
 
   function collectFeedCards(root) {
     if (!root || root.nodeType !== Node.ELEMENT_NODE) return [];
     const raw = new Set();
-    if (root.matches?.(LIST_ITEM_SELECTOR) || root.matches?.(SUGGESTED_VIEW_SELECTOR)) {
-      const card = feedCardRoot(root);
-      if (card) raw.add(card);
+    const card = resolveFeedCard(root);
+    if (card) raw.add(card);
+
+    for (let s = 0; s < CARD_PROBE_SELECTORS.length; s++) {
+      const hits = deepQueryAll(root, CARD_PROBE_SELECTORS[s]);
+      for (let i = 0; i < hits.length; i++) {
+        const hit = resolveFeedCard(hits[i]) || hits[i];
+        raw.add(hit);
+      }
     }
-    root.querySelectorAll(LIST_ITEM_SELECTOR).forEach((el) => {
-      const card = feedCardRoot(el);
-      if (card) raw.add(card);
-    });
-    root.querySelectorAll(SUGGESTED_VIEW_SELECTOR).forEach((el) => {
-      const card = feedCardRoot(el);
-      if (card) raw.add(card);
-    });
+
+    for (const el of deepQueryAll(root, LABEL_SELECTOR)) {
+      if (!isSuggestedLabel(labelText(el))) continue;
+      const hit = resolveFeedCard(el);
+      if (hit) raw.add(hit);
+    }
     return [...raw];
   }
 
+  function deepQueryFirst(item, selector) {
+    const hits = deepQueryAll(item, selector);
+    return hits.length ? hits[0] : null;
+  }
+
   function authorOf(item) {
-    const a = item.querySelector('a[href*="/in/"], a[href*="/company/"]');
+    const a = deepQueryFirst(item, 'a[href*="/in/"], a[href*="/company/"]');
     if (!a) return null;
     const m = (a.getAttribute("href") || "").match(/\/(in|company)\/([^/?#]+)/);
     return m ? `${m[1]}/${m[2]}` : null;
   }
 
   function urnOf(item) {
-    const n = item.querySelector("[data-urn]");
+    const n = deepQueryFirst(item, "[data-urn]");
     return n?.getAttribute("data-urn") || item.getAttribute("data-urn") || null;
   }
 
@@ -177,12 +254,15 @@
       if (item.getAttribute(HIDDEN_ATTR) === "1") return false;
       item.setAttribute(HIDDEN_ATTR, "1");
       item.setAttribute("aria-hidden", "true");
+      // hide.css does not pierce shadow DOM; inline display is required there.
+      item.style.setProperty("display", "none", "important");
       pageHidden++;
       return true;
     }
     if (item.getAttribute(HIDDEN_ATTR) !== "1") return false;
     item.removeAttribute(HIDDEN_ATTR);
     item.removeAttribute("aria-hidden");
+    item.style.removeProperty("display");
     pageHidden = Math.max(0, pageHidden - 1);
     return true;
   }
@@ -307,7 +387,7 @@
 
   /** Re-evaluate every currently hidden item: un-hide if it no longer matches. */
   function unhideStale() {
-    const hidden = document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`);
+    const hidden = deepQueryAll(document.body, `[${HIDDEN_ATTR}="1"]`);
     let restored = 0;
     for (let i = 0; i < hidden.length; i++) {
       const item = hidden[i];
@@ -320,7 +400,7 @@
   }
 
   function showAll() {
-    const hidden = document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`);
+    const hidden = deepQueryAll(document.body, `[${HIDDEN_ATTR}="1"]`);
     for (let i = 0; i < hidden.length; i++) setHidden(hidden[i], false);
     pageHidden = 0;
   }
@@ -381,13 +461,14 @@
       url: location.href,
       enabled,
       feedCards: items.length,
-      dataViewSuggested: document.querySelectorAll(SUGGESTED_VIEW_SELECTOR).length,
+      dataViewSuggested: deepQueryAll(document.body, SUGGESTED_VIEW_SELECTOR).length,
+      shadowRoots: countShadowRoots(document.documentElement),
       suggestedHits: suggested,
       suggestedWithUrn: withUrn,
       suggestedWithoutUrn: suggestedItems.length - withUrn,
       killMatches: killed,
       storedKills: kills.length,
-      hidden: document.querySelectorAll(`[${HIDDEN_ATTR}="1"]`).length,
+      hidden: deepQueryAll(document.body, `[${HIDDEN_ATTR}="1"]`).length,
       pageHidden,
       lifetimeSize: lifetimeUrns.size,
       pendingFlushScheduled: !!pendingStatsFlush,
