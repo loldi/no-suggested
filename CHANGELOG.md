@@ -4,7 +4,19 @@
 
 **Version bumps = functional deployments** (new features, meaningful UI ships, releases users install).
 
-Bug fixes, regression patches, and debugging tooling ship **inside** the next deployment version. Do not mint a new version for each fix attempt (no v1.2.3 for diag, v1.2.4 for shadow DOM, etc.).
+Bug fixes, regression patches, and debugging tooling ship **inside** the next deployment version. Do not mint a new version for each fix attempt.
+
+---
+
+## v1.3.0 — Hide headerless suggested posts (2026-05-29)
+
+LinkedIn sometimes injects suggested/discovery posts **without** the "Suggested" header row. They often look like a 2nd/3rd-degree profile with a **+ Follow** button and no "liked this" / repost context.
+
+**Detection added:**
+- Broader `data-view-name` match (`suggest`, `recommend`, `discover`)
+- Headerless heuristic: `• 2nd` / `• 3rd` + Follow CTA, no engagement header
+
+**Manual block** still works for anything that slips through.
 
 ---
 

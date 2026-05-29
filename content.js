@@ -13,7 +13,7 @@
 (function () {
   "use strict";
 
-  const VERSION = "1.2.2";
+  const VERSION = "1.3.0";
   const LOG = "[No Suggested]";
   const HIDDEN_ATTR = "data-no-suggested-hidden";
   const DEBUG_KEY = "no-suggested-debug";
@@ -132,18 +132,63 @@
   }
 
   /** LinkedIn marks suggested feed cards with data-view-name; label text
-   *  may sit in nested spans (no longer leaf-only). */
-  function isSuggested(item) {
-    if (item.matches?.(SUGGESTED_VIEW_SELECTOR)) return true;
-    if (deepQueryAll(item, SUGGESTED_VIEW_SELECTOR).length) return true;
+   *  may sit in nested spans (no longer leaf-only). Some suggested posts
+   *  drop the visible "Suggested" header but still show 2nd/3rd + Follow. */
+  function feedHeaderSlice(item) {
+    return (item.textContent || "").replace(/\s+/g, " ").trim().slice(0, 320);
+  }
 
+  function hasEngagementHeader(header) {
+    return /liked this|commented on this|reposted this|shared this|shared a post|celebrates/i.test(
+      header
+    );
+  }
+
+  function hasNonFirstDegree(header) {
+    return /[•·]\s*2nd|[•·]\s*3rd\+?|\b2nd degree|\b3rd\+?\b/i.test(header);
+  }
+
+  function hasFollowCta(item) {
+    for (const el of deepQueryAll(item, "button, a")) {
+      const t = normalizeLabel(el.textContent);
+      if (t === "Follow" || t === "+ Follow") return true;
+    }
+    return false;
+  }
+
+  function hasSuggestedViewName(item) {
+    if (item.matches?.(SUGGESTED_VIEW_SELECTOR)) return true;
+    for (const el of walkDeep(item)) {
+      const vn = el.getAttribute?.("data-view-name");
+      if (vn && /suggest|recommend|discover/i.test(vn)) return true;
+    }
+    return false;
+  }
+
+  function hasLabeledSuggested(item) {
     const text = item.textContent;
     if (!text || !text.includes("Suggested")) return false;
-
     const labels = deepQueryAll(item, LABEL_SELECTOR);
     for (let i = 0; i < labels.length; i++) {
       if (isSuggestedLabel(labelText(labels[i]))) return true;
     }
+    return false;
+  }
+
+  /** Suggested injection with no "Suggested" / "liked this" header row. */
+  function isHeaderlessSuggested(item) {
+    const header = feedHeaderSlice(item);
+    if (hasEngagementHeader(header)) return false;
+    if (/\bPromoted\b/i.test(header.slice(0, 100))) return false;
+    if (!hasNonFirstDegree(header)) return false;
+    if (/\bFollowing\b/i.test(header)) return false;
+    return hasFollowCta(item);
+  }
+
+  function isSuggested(item) {
+    if (hasSuggestedViewName(item)) return true;
+    if (hasLabeledSuggested(item)) return true;
+    if (isHeaderlessSuggested(item)) return true;
     return false;
   }
 
@@ -455,6 +500,12 @@
       else if (matchesKill(it)) killed++;
     });
     const suggestedItems = items.filter((it) => isSuggested(it));
+    let labeledHits = 0;
+    let headerlessHits = 0;
+    suggestedItems.forEach((it) => {
+      if (hasLabeledSuggested(it) || hasSuggestedViewName(it)) labeledHits++;
+      else if (isHeaderlessSuggested(it)) headerlessHits++;
+    });
     const withUrn = suggestedItems.filter((it) => !!urnOf(it)).length;
     const report = {
       version: VERSION,
@@ -464,6 +515,8 @@
       dataViewSuggested: deepQueryAll(document.body, SUGGESTED_VIEW_SELECTOR).length,
       shadowRoots: countShadowRoots(document.documentElement),
       suggestedHits: suggested,
+      labeledHits,
+      headerlessHits,
       suggestedWithUrn: withUrn,
       suggestedWithoutUrn: suggestedItems.length - withUrn,
       killMatches: killed,
