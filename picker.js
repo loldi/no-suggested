@@ -91,14 +91,24 @@
     if (item) item.classList.add(HIGHLIGHT_CLASS);
   }
 
-  function toast(html, ttl = 1800) {
+  function toast(parts, ttl = 1800) {
     let el = document.getElementById(TOAST_ID);
     if (!el) {
       el = document.createElement("div");
       el.id = TOAST_ID;
       document.body.appendChild(el);
     }
-    el.innerHTML = html;
+    el.replaceChildren();
+    if (typeof parts === "string") {
+      el.textContent = parts;
+    } else {
+      if (parts.strong) {
+        const b = document.createElement("strong");
+        b.textContent = parts.strong;
+        el.append(b);
+      }
+      if (parts.text) el.append(document.createTextNode(parts.text));
+    }
     el.setAttribute("data-visible", "1");
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => el.removeAttribute("data-visible"), ttl);
@@ -118,7 +128,7 @@
     if (!item) return;
     const fp = fingerprint(item);
     if (!fp.activityUrn && !fp.author && !fp.textSnippet) {
-      toast("<strong>Couldn't fingerprint</strong> — nothing to remember by.");
+      toast({ strong: "Couldn't fingerprint", text: " — nothing to remember by." });
       return;
     }
     saveKill(fp).then(() => {
@@ -129,7 +139,7 @@
         : fp.activityUrn
         ? "this post"
         : "this card";
-      toast(`<strong>Blocked.</strong> Hiding ${label} on future loads.`);
+      toast({ strong: "Blocked.", text: ` Hiding ${label} on future loads.` });
     });
   }
 
@@ -149,7 +159,7 @@
     if (active) return;
     active = true;
     document.documentElement.classList.add(ACTIVE_CLASS);
-    toast("<strong>Manual block on.</strong> Click a post to hide it. ESC to cancel.", 3000);
+    toast({ strong: "Manual block on.", text: " Click a post to hide it. ESC to cancel." }, 3000);
   }
 
   function deactivate() {

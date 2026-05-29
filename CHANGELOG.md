@@ -25,6 +25,7 @@ LinkedIn changed the feed again; Suggested cards were visible with popup showing
 | Detection | `[data-view-name="feed-suggested-update"]`, relaxed Suggested label match, label-first fallback |
 | Hide | Data-attribute + inline `display: none !important` for shadow-contained cards |
 | Diag | `page-diag.js` via `web_accessible_resources` (CSP blocked inline bridge) |
+| AMO | `data_collection_permissions: { required: ["none"] }`, Firefox 140+, no `innerHTML` in picker toasts |
 
 **Future regressions:** If Suggesteds slip through, run `noSuggestedDiag()`. `feedCards: 0` with posts visible = DOM boundary changed again.
 
